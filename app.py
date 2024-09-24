@@ -11,6 +11,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', os.urandom(24))
 app.config['UPLOAD_FOLDER'] = os.getenv('PDF_DIRECTORY')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
+app.config['SESSION_TYPE'] = 'filesystem'
 
 @app.route('/')
 def index():
@@ -85,7 +86,20 @@ def conversation():
     session['conversation_history'].append({"role": "user", "content": query})
 
     task = generate_context_aware_response.delay(query, session['conversation_history'])
-    return jsonify({'task_id': task.id}), 202
+    return jsonify({'task_id': task.id, 'conversation_id': session['conversation_id']}), 202
+
+@app.route('/conversation_history', methods=['GET'])
+def get_conversation_history():
+    if 'conversation_id' not in session:
+        return jsonify({'error': 'No active conversation'}), 404
+    return jsonify({'conversation_history': session['conversation_history']}), 200
+
+@app.route('/clear_conversation', methods=['POST'])
+def clear_conversation():
+    if 'conversation_id' in session:
+        session.pop('conversation_id')
+        session.pop('conversation_history')
+    return jsonify({'message': 'Conversation cleared'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

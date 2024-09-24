@@ -38,17 +38,32 @@
         <button type="submit">PDFs indexieren</button>
     </form>
     
-    <form id="searchForm">
-        <h2>Suche</h2>
-        <label for="query">Suchanfrage:</label>
+    <form id="conversationForm">
+        <h2>Konversation</h2>
+        <label for="query">Ihre Nachricht:</label>
         <input type="text" id="query" name="query" required>
-        <button type="submit">Suchen</button>
+        <button type="submit">Senden</button>
     </form>
     
+    <div id="conversationHistory"></div>
     <div id="result"></div>
+
+    <button id="clearConversation">Konversation löschen</button>
 
     <script>
         $(document).ready(function() {
+            let conversationId = null;
+
+            function updateConversationHistory() {
+                $.get('/conversation_history', function(data) {
+                    let historyHtml = '<h3>Konversationsverlauf:</h3>';
+                    data.conversation_history.forEach(function(message) {
+                        historyHtml += '<p><strong>' + message.role + ':</strong> ' + message.content + '</p>';
+                    });
+                    $('#conversationHistory').html(historyHtml);
+                });
+            }
+
             $('#uploadForm').submit(function(e) {
                 e.preventDefault();
                 var formData = new FormData(this);
@@ -77,13 +92,22 @@
                 });
             });
 
-            $('#searchForm').submit(function(e) {
+            $('#conversationForm').submit(function(e) {
                 e.preventDefault();
-                $('#result').html('<p>Suche gestartet, bitte warten...</p>');
-                $.post('/search', $(this).serialize(), function(data) {
-                    checkTaskStatus(data.task_id, 'Suche');
+                $('#result').html('<p>Verarbeitung läuft, bitte warten...</p>');
+                $.post('/conversation', $(this).serialize(), function(data) {
+                    conversationId = data.conversation_id;
+                    checkTaskStatus(data.task_id, 'Konversation');
                 }).fail(function(jqXHR, textStatus, errorThrown) {
-                    $('#result').html('<h3>Fehler beim Starten der Suche:</h3><p>' + jqXHR.responseJSON.error + '</p>');
+                    $('#result').html('<h3>Fehler beim Starten der Konversation:</h3><p>' + jqXHR.responseJSON.error + '</p>');
+                });
+            });
+
+            $('#clearConversation').click(function() {
+                $.post('/clear_conversation', function(data) {
+                    $('#conversationHistory').html('');
+                    $('#result').html('<p>' + data.message + '</p>');
+                    conversationId = null;
                 });
             });
 
@@ -95,7 +119,8 @@
                             checkTaskStatus(taskId, taskType);
                         }, 2000);
                     } else if (data.state === 'SUCCESS') {
-                        $('#result').html('<h3>' + taskType + '-Ergebnis:</h3><p>' + data.result + '</p>');
+                        $('#result').html('<h3>' + taskType + '-Ergebnis:</h3><p>' + data.result.response + '</p>');
+                        updateConversationHistory();
                     } else {
                         $('#result').html('<h3>Fehler bei der ' + taskType + ':</h3><p>' + data.status + '</p>');
                     }
@@ -103,6 +128,9 @@
                     $('#result').html('<h3>Fehler beim Abrufen des Task-Status:</h3><p>Bitte versuchen Sie es später erneut.</p>');
                 });
             }
+
+            // Initial load of conversation history
+            updateConversationHistory();
         });
     </script>
 </body>
