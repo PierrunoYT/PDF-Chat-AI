@@ -8,11 +8,13 @@ from werkzeug.utils import secure_filename
 load_dotenv()
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = os.getenv('PDF_DIRECTORY')
+app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
 
 @app.route('/')
 def index():
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])

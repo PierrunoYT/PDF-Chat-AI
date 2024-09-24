@@ -38,11 +38,11 @@ def clean_and_preprocess_text(text):
     
     return cleaned_text
 
-def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200, use_faiss=True, db_manager=None, embedding_model=None, faiss_manager=None):
+def process_multiple_pdfs(pdf_files, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200, use_faiss=True, db_manager=None, embedding_model=None, faiss_manager=None):
     """
-    Process multiple PDF files in a directory, store results in a database, and generate embeddings for text chunks.
+    Process multiple PDF files, store results in a database, and generate embeddings for text chunks.
     
-    :param directory: Path to the directory containing PDF files
+    :param pdf_files: List of PDF file paths
     :param save_to_file: If True, save extracted text to individual text files
     :param keyword_filter: If provided, only process PDFs with this keyword in the filename
     :param max_pages: If provided, limit the number of pages processed per PDF
@@ -56,9 +56,8 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
     :return: Dictionary with PDF filenames as keys and lists of tuples (chunk_text, chunk_embedding) as values
     """
     results = {}
-    pdf_files = [f for f in os.listdir(directory) if f.endswith(".pdf")]
     if keyword_filter:
-        pdf_files = [f for f in pdf_files if keyword_filter.lower() in f.lower()]
+        pdf_files = [f for f in pdf_files if keyword_filter.lower() in os.path.basename(f).lower()]
     total_files = len(pdf_files)
     
     successful_extractions = 0
@@ -74,8 +73,8 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
         faiss_manager = FAISSManager(embedding_model.get_embedding_dimension())
         db_manager.set_faiss_manager(faiss_manager)
     
-    for i, filename in enumerate(pdf_files, 1):
-        file_path = os.path.join(directory, filename)
+    for i, file_path in enumerate(pdf_files, 1):
+        filename = os.path.basename(file_path)
         print(f"Processing {i}/{total_files}: {filename}")
         
         text, page_count = extract_text_from_pdf(file_path, max_pages, clean_text)

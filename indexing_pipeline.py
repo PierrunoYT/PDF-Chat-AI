@@ -12,7 +12,6 @@ load_dotenv()
 
 class IndexingPipeline:
     def __init__(self):
-        self.pdf_directory = os.getenv('PDF_DIRECTORY')
         self.db_manager = DatabaseManager(os.getenv('DB_NAME'))
         self.embedding_model = EmbeddingModel(
             use_openrouter=os.getenv('USE_OPENROUTER', 'True').lower() == 'true',
@@ -24,9 +23,9 @@ class IndexingPipeline:
         self.query_processor = QueryProcessor(self.embedding_model)
         self.openrouter_client = OpenRouterClient()
 
-    def run(self, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
+    def run(self, pdf_files, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
         results = process_multiple_pdfs(
-            self.pdf_directory,
+            pdf_files,
             save_to_file=save_to_file,
             keyword_filter=keyword_filter,
             max_pages=max_pages,
