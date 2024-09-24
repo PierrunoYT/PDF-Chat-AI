@@ -3,3 +3,4 @@ nltk
 sentence_transformers
 faiss-cpu
 numpy
+requests

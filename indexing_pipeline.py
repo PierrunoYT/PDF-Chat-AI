@@ -7,10 +7,10 @@ from faiss_manager import FAISSManager
 from query_processor import QueryProcessor
 
 class IndexingPipeline:
-    def __init__(self, pdf_directory, db_name='pdf_extracts.db', faiss_index_file='pdf_embeddings.faiss'):
+    def __init__(self, pdf_directory, db_name='pdf_extracts.db', faiss_index_file='pdf_embeddings.faiss', use_openrouter=False):
         self.pdf_directory = pdf_directory
         self.db_manager = DatabaseManager(db_name)
-        self.embedding_model = EmbeddingModel()
+        self.embedding_model = EmbeddingModel(use_openrouter=use_openrouter)
         self.faiss_manager = FAISSManager(self.embedding_model.get_embedding_dimension())
         self.db_manager.set_faiss_manager(self.faiss_manager)
         self.faiss_index_file = faiss_index_file
@@ -67,7 +67,8 @@ class IndexingPipeline:
 
 if __name__ == "__main__":
     pdf_directory = "path/to/your/pdf/directory"
-    pipeline = IndexingPipeline(pdf_directory)
+    use_openrouter = True  # Set this to True to use OpenRouter
+    pipeline = IndexingPipeline(pdf_directory, use_openrouter=use_openrouter)
 
     # Run the indexing process
     results = pipeline.run(save_to_file=True, keyword_filter="report", max_pages=10, clean_text=True)
