@@ -1,45 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Search and Indexing</title>
+    <title>PDF Suche und Indexierung</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        form {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            background-color: #e8f4f8;
+            border: 1px solid #b8d4e3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>PDF Search and Indexing</h1>
+    <h1>PDF Suche und Indexierung</h1>
     
-    <h2>Dokument hochladen</h2>
     <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="document" name="document" accept=".pdf" required><br><br>
+        <h2>Dokument hochladen</h2>
+        <input type="file" id="document" name="document" accept=".pdf" required>
         <button type="submit">Hochladen</button>
     </form>
 
-    <h2>PDFs indexieren</h2>
     <form id="indexForm">
+        <h2>PDFs indexieren</h2>
         <label for="keyword_filter">Stichwortfilter:</label>
-        <input type="text" id="keyword_filter" name="keyword_filter"><br><br>
+        <input type="text" id="keyword_filter" name="keyword_filter">
         
         <label for="max_pages">Maximale Seitenzahl:</label>
-        <input type="number" id="max_pages" name="max_pages" value="10"><br><br>
+        <input type="number" id="max_pages" name="max_pages" value="10">
         
         <label for="clean_text">Text bereinigen:</label>
-        <input type="checkbox" id="clean_text" name="clean_text" checked><br><br>
+        <input type="checkbox" id="clean_text" name="clean_text" checked>
         
         <label for="chunk_size">Chunk-Größe:</label>
-        <input type="number" id="chunk_size" name="chunk_size" value="1000"><br><br>
+        <input type="number" id="chunk_size" name="chunk_size" value="1000">
         
         <label for="chunk_overlap">Chunk-Überlappung:</label>
-        <input type="number" id="chunk_overlap" name="chunk_overlap" value="200"><br><br>
+        <input type="number" id="chunk_overlap" name="chunk_overlap" value="200">
         
         <button type="submit">PDFs indexieren</button>
     </form>
     
-    <h2>Suche</h2>
     <form id="searchForm">
+        <h2>Suche</h2>
         <label for="query">Suchanfrage:</label>
-        <input type="text" id="query" name="query" required><br><br>
-        
+        <input type="text" id="query" name="query" required>
         <button type="submit">Suchen</button>
     </form>
     
@@ -57,22 +105,31 @@
                     processData: false,
                     contentType: false,
                     success: function(data) {
-                        $('#result').text(data.message);
+                        $('#result').html('<h3>Upload-Ergebnis:</h3><p>' + data.message + '</p>');
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        $('#result').html('<h3>Fehler beim Hochladen:</h3><p>' + jqXHR.responseJSON.error + '</p>');
                     }
                 });
             });
 
             $('#indexForm').submit(function(e) {
                 e.preventDefault();
+                $('#result').html('<p>Indexierung läuft, bitte warten...</p>');
                 $.post('/index_pdfs', $(this).serialize(), function(data) {
-                    $('#result').text(data.message);
+                    $('#result').html('<h3>Indexierungs-Ergebnis:</h3><p>' + data.message + '</p>');
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    $('#result').html('<h3>Fehler bei der Indexierung:</h3><p>' + jqXHR.responseJSON.error + '</p>');
                 });
             });
 
             $('#searchForm').submit(function(e) {
                 e.preventDefault();
+                $('#result').html('<p>Suche läuft, bitte warten...</p>');
                 $.post('/search', $(this).serialize(), function(data) {
-                    $('#result').text(data.response);
+                    $('#result').html('<h3>Suchergebnis:</h3><p>' + data.response + '</p>');
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    $('#result').html('<h3>Fehler bei der Suche:</h3><p>' + jqXHR.responseJSON.error + '</p>');
                 });
             });
         });
