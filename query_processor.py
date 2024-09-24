@@ -2,13 +2,11 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 import string
-from embedding_model import EmbeddingModel
-
 class QueryProcessor:
-    def __init__(self):
+    def __init__(self, embedding_model):
         self.stop_words = set(stopwords.words('english'))
         self.lemmatizer = WordNetLemmatizer()
-        self.embedding_model = EmbeddingModel()
+        self.embedding_model = embedding_model
 
     def preprocess_query(self, query):
         """
