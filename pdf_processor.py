@@ -6,26 +6,7 @@ from PyPDF2.errors import PdfReadError
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
-def extract_text_from_pdf(pdf_path):
-    """
-    Extract text from a single PDF file.
-    
-    :param pdf_path: Path to the PDF file
-    :return: Extracted text as a string, or None if an error occurs
-    """
-    try:
-        with open(pdf_path, 'rb') as file:
-            reader = PdfReader(file)
-            text = ""
-            for page in reader.pages:
-                text += page.extract_text() + "\n"
-        if clean_text:
-            return clean_and_preprocess_text(text)
-        else:
-            return text
-    except (IOError, PdfReadError) as e:
-        print(f"Error processing {pdf_path}: {str(e)}")
-        return None
+# This function is now redundant and can be removed
 
 def clean_and_preprocess_text(text):
     """
