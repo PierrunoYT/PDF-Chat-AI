@@ -6,53 +6,7 @@
     <title>PDF Suche und Indexierung</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1, h2 {
-            color: #2c3e50;
-        }
-        form {
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"], input[type="number"], input[type="file"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        #result {
-            background-color: #e8f4f8;
-            border: 1px solid #b8d4e3;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 5px;
-        }
+        /* ... (existing styles) ... */
     </style>
 </head>
 <body>
@@ -115,23 +69,40 @@
 
             $('#indexForm').submit(function(e) {
                 e.preventDefault();
-                $('#result').html('<p>Indexierung läuft, bitte warten...</p>');
+                $('#result').html('<p>Indexierung gestartet, bitte warten...</p>');
                 $.post('/index_pdfs', $(this).serialize(), function(data) {
-                    $('#result').html('<h3>Indexierungs-Ergebnis:</h3><p>' + data.message + '</p>');
+                    checkTaskStatus(data.task_id, 'Indexierung');
                 }).fail(function(jqXHR, textStatus, errorThrown) {
-                    $('#result').html('<h3>Fehler bei der Indexierung:</h3><p>' + jqXHR.responseJSON.error + '</p>');
+                    $('#result').html('<h3>Fehler beim Starten der Indexierung:</h3><p>' + jqXHR.responseJSON.error + '</p>');
                 });
             });
 
             $('#searchForm').submit(function(e) {
                 e.preventDefault();
-                $('#result').html('<p>Suche läuft, bitte warten...</p>');
+                $('#result').html('<p>Suche gestartet, bitte warten...</p>');
                 $.post('/search', $(this).serialize(), function(data) {
-                    $('#result').html('<h3>Suchergebnis:</h3><p>' + data.response + '</p>');
+                    checkTaskStatus(data.task_id, 'Suche');
                 }).fail(function(jqXHR, textStatus, errorThrown) {
-                    $('#result').html('<h3>Fehler bei der Suche:</h3><p>' + jqXHR.responseJSON.error + '</p>');
+                    $('#result').html('<h3>Fehler beim Starten der Suche:</h3><p>' + jqXHR.responseJSON.error + '</p>');
                 });
             });
+
+            function checkTaskStatus(taskId, taskType) {
+                $.get('/task_status/' + taskId, function(data) {
+                    if (data.state === 'PENDING') {
+                        $('#result').html('<p>' + taskType + ' läuft, bitte warten...</p>');
+                        setTimeout(function() {
+                            checkTaskStatus(taskId, taskType);
+                        }, 2000);
+                    } else if (data.state === 'SUCCESS') {
+                        $('#result').html('<h3>' + taskType + '-Ergebnis:</h3><p>' + data.result + '</p>');
+                    } else {
+                        $('#result').html('<h3>Fehler bei der ' + taskType + ':</h3><p>' + data.status + '</p>');
+                    }
+                }).fail(function() {
+                    $('#result').html('<h3>Fehler beim Abrufen des Task-Status:</h3><p>Bitte versuchen Sie es später erneut.</p>');
+                });
+            }
         });
     </script>
 </body>

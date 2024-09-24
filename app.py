@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
-from indexing_pipeline import IndexingPipeline
+from celery_tasks import run_indexing_pipeline, generate_context_aware_response
 import os
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
@@ -9,8 +9,6 @@ load_dotenv()
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.getenv('PDF_DIRECTORY')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
-
-pipeline = IndexingPipeline()
 
 @app.route('/')
 def index():
@@ -34,12 +32,12 @@ def upload_file():
 @app.route('/search', methods=['POST'])
 def search():
     query = request.form['query']
-    response = pipeline.generate_context_aware_response(query)
-    return jsonify({'response': response})
+    task = generate_context_aware_response.delay(query)
+    return jsonify({'task_id': task.id}), 202
 
 @app.route('/index_pdfs', methods=['POST'])
 def index_pdfs():
-    results = pipeline.run(
+    task = run_indexing_pipeline.delay(
         save_to_file=True,
         keyword_filter=request.form.get('keyword_filter'),
         max_pages=int(request.form.get('max_pages', 10)),
@@ -47,7 +45,29 @@ def index_pdfs():
         chunk_size=int(request.form.get('chunk_size', os.getenv('CHUNK_SIZE', 1000))),
         chunk_overlap=int(request.form.get('chunk_overlap', os.getenv('CHUNK_OVERLAP', 200)))
     )
-    return jsonify({'message': f'Indexed {len(results)} PDF files successfully.'})
+    return jsonify({'task_id': task.id}), 202
+
+@app.route('/task_status/<task_id>')
+def task_status(task_id):
+    task = run_indexing_pipeline.AsyncResult(task_id)
+    if task.state == 'PENDING':
+        response = {
+            'state': task.state,
+            'status': 'Task is pending...'
+        }
+    elif task.state != 'FAILURE':
+        response = {
+            'state': task.state,
+            'status': task.info.get('status', '')
+        }
+        if 'result' in task.info:
+            response['result'] = task.info['result']
+    else:
+        response = {
+            'state': task.state,
+            'status': str(task.info)
+        }
+    return jsonify(response)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
