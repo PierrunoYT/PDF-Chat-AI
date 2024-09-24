@@ -101,6 +101,38 @@ class QueryProcessor:
         """
         return self.prompt_engineer.generate_prompt(query, context_chunks)
 
+    def generate_refinement_prompt(self, response, query, context_chunks):
+        """
+        Generate a refinement prompt for the given response, query, and context chunks.
+        
+        :param response: Initial response string
+        :param query: Original query string
+        :param context_chunks: List of (chunk, relevance_score) tuples
+        :return: Refinement prompt string
+        """
+        context = "\n\n".join(chunk for chunk, _ in context_chunks)
+        
+        refinement_prompt = f"""
+        Your previous response:
+        {response}
+
+        Original query: {query}
+
+        Context:
+        {context}
+
+        Please review your response and consider the following:
+        1. Does it directly address the user's query?
+        2. Is it supported by the given context?
+        3. Is it concise and clear?
+
+        If necessary, provide a refined response that better addresses these points.
+
+        Refined Response:
+        """
+        
+        return refinement_prompt
+
     def refine_response(self, response, query, context_chunks):
         """
         Refine the generated response based on the query and context.

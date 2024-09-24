@@ -11,13 +11,13 @@ class OpenRouterClient:
         self.site_url = site_url
         self.site_name = site_name
 
-    def chat_completion(self, messages: List[Dict[str, str]], model: str = "anthropic/claude-3.5-sonnet") -> Dict[str, Any]:
+    def chat_completion(self, messages: List[Dict[str, str]], model: str = "anthropic/claude-3-opus-20240229") -> str:
         """
         Send a chat completion request to OpenRouter.
 
         :param messages: List of message dictionaries
         :param model: The model to use for completion
-        :return: The API response as a dictionary
+        :return: The generated response as a string
         """
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -36,7 +36,7 @@ class OpenRouterClient:
 
         response = requests.post(f"{self.base_url}/chat/completions", headers=headers, json=data)
         response.raise_for_status()
-        return response.json()
+        return response.json()["choices"][0]["message"]["content"]
 
     def generate_embedding(self, text: str, model: str = "openai/text-embedding-ada-002") -> List[float]:
         """

@@ -5,9 +5,10 @@ from embedding_model import EmbeddingModel
 import numpy as np
 from faiss_manager import FAISSManager
 from query_processor import QueryProcessor
+from openrouter_client import OpenRouterClient
 
 class IndexingPipeline:
-    def __init__(self, pdf_directory, db_name='pdf_extracts.db', faiss_index_file='pdf_embeddings.faiss', use_openrouter=False, site_url=None, site_name=None):
+    def __init__(self, pdf_directory, db_name='pdf_extracts.db', faiss_index_file='pdf_embeddings.faiss', use_openrouter=True, site_url=None, site_name=None):
         self.pdf_directory = pdf_directory
         self.db_manager = DatabaseManager(db_name)
         self.embedding_model = EmbeddingModel(use_openrouter=use_openrouter, site_url=site_url, site_name=site_name)
@@ -15,6 +16,7 @@ class IndexingPipeline:
         self.db_manager.set_faiss_manager(self.faiss_manager)
         self.faiss_index_file = faiss_index_file
         self.query_processor = QueryProcessor(self.embedding_model)
+        self.openrouter_client = OpenRouterClient(site_url=site_url, site_name=site_name)
 
     def run(self, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
         results = process_multiple_pdfs(
@@ -64,7 +66,7 @@ class IndexingPipeline:
 
     def generate_context_aware_response(self, query_text, k=5):
         """
-        Generate a context-aware response for the given query.
+        Generate a context-aware response for the given query using OpenRouter.
         
         :param query_text: Input query string
         :param k: Number of top chunks to use for context (default: 5)
@@ -73,11 +75,20 @@ class IndexingPipeline:
         top_chunks = self.get_top_k_relevant_chunks(query_text, k)
         prompt = self.query_processor.generate_context_aware_prompt(query_text, top_chunks)
         
-        # In a real implementation, you would send this prompt to the AI model (e.g., OpenAI API)
-        # and get a response. For now, we'll just return a placeholder response.
-        initial_response = f"This is a placeholder response for the query: {query_text}"
+        messages = [
+            {"role": "system", "content": "You are a helpful AI assistant that provides accurate and relevant information based on the given context."},
+            {"role": "user", "content": prompt}
+        ]
         
-        refined_response = self.query_processor.refine_response(initial_response, query_text, top_chunks)
+        initial_response = self.openrouter_client.chat_completion(messages)
+        
+        refinement_prompt = self.query_processor.generate_refinement_prompt(initial_response, query_text, top_chunks)
+        refinement_messages = [
+            {"role": "system", "content": "You are a helpful AI assistant that refines responses to ensure accuracy and relevance."},
+            {"role": "user", "content": refinement_prompt}
+        ]
+        
+        refined_response = self.openrouter_client.chat_completion(refinement_messages)
         return refined_response
 
     def load_index(self):

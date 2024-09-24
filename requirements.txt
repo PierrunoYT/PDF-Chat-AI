@@ -3,4 +3,4 @@ nltk
 sentence_transformers
 faiss-cpu
 numpy
-requests
+requests==2.26.0
