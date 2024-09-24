@@ -2,11 +2,13 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 import string
+from embedding_model import EmbeddingModel
 
 class QueryProcessor:
     def __init__(self):
         self.stop_words = set(stopwords.words('english'))
         self.lemmatizer = WordNetLemmatizer()
+        self.embedding_model = EmbeddingModel()
 
     def preprocess_query(self, query):
         """
@@ -52,3 +54,13 @@ class QueryProcessor:
         preprocessed_tokens = self.preprocess_query(query)
         expanded_tokens = self.expand_query(preprocessed_tokens)
         return ' '.join(expanded_tokens)
+
+    def query_to_embedding(self, query):
+        """
+        Convert a query to its embedding representation.
+        
+        :param query: Input query string
+        :return: Embedding vector for the processed query
+        """
+        processed_query = self.process_query(query)
+        return self.embedding_model.get_embedding(processed_query)

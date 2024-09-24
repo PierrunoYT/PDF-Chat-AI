@@ -36,8 +36,7 @@ class IndexingPipeline:
         return results
 
     def search_similar_chunks(self, query_text, k=5):
-        processed_query = self.query_processor.process_query(query_text)
-        query_vector = self.embedding_model.get_embedding(processed_query)
+        query_vector = self.query_processor.query_to_embedding(query_text)
         return self.db_manager.search_similar_chunks(query_vector, k)
 
 if __name__ == "__main__":
