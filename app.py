@@ -49,21 +49,25 @@ def upload_file():
         filename = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         file.save(filename)
-        task_id = str(uuid.uuid4())
-        thread = threading.Thread(target=run_indexing_pipeline_task, args=(
-            task_id,
-            filename,
-            True,
-            request.form.get('keyword_filter'),
-            int(request.form.get('max_pages', 10)),
-            request.form.get('clean_text', 'true').lower() == 'true',
-            int(request.form.get('chunk_size', 1000)),
-            int(request.form.get('chunk_overlap', 200))
-        ))
-        thread.start()
-        return jsonify({'message': f'File {file.filename} uploaded and indexing started', 'task_id': task_id}), 202
+        return jsonify({'message': f'File {file.filename} uploaded successfully'}), 200
     else:
         return jsonify({'error': 'Invalid file type. Please upload a PDF.'}), 400
+
+@app.route('/index_pdfs', methods=['POST'])
+def index_pdfs():
+    task_id = str(uuid.uuid4())
+    thread = threading.Thread(target=run_indexing_pipeline_task, args=(
+        task_id,
+        app.config['UPLOAD_FOLDER'],
+        True,
+        request.form.get('keyword_filter'),
+        int(request.form.get('max_pages', 10)),
+        request.form.get('clean_text', 'true').lower() == 'true',
+        int(request.form.get('chunk_size', 1000)),
+        int(request.form.get('chunk_overlap', 200))
+    ))
+    thread.start()
+    return jsonify({'message': 'Indexing started', 'task_id': task_id}), 202
 
 @app.route('/search', methods=['POST'])
 def search():
