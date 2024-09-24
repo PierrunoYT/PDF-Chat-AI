@@ -5,11 +5,13 @@ from dotenv import load_dotenv
 import threading
 import uuid
 import io
+import os
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
+app.config['UPLOAD_FOLDER'] = 'uploads'
 
 # Dictionary to store task results
 task_results = {}
@@ -44,12 +46,13 @@ def upload_file():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     if file and file.filename.lower().endswith('.pdf'):
-        pdf_file = io.BytesIO(file.read())
-        pdf_file.name = file.filename
+        filename = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        file.save(filename)
         task_id = str(uuid.uuid4())
         thread = threading.Thread(target=run_indexing_pipeline_task, args=(
             task_id,
-            pdf_file,
+            filename,
             True,
             request.form.get('keyword_filter'),
             int(request.form.get('max_pages', 10)),

@@ -25,6 +25,9 @@ class IndexingPipeline:
         self.openrouter_client = OpenRouterClient()
 
     def run(self, pdf_files, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
+        if isinstance(pdf_files, str):
+            pdf_files = [pdf_files]
+        
         results = process_multiple_pdfs(
             pdf_files,
             save_to_file=save_to_file,

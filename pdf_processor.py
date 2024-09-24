@@ -80,11 +80,8 @@ def extract_text_from_pdf(pdf_file, max_pages=None, clean_text=False, max_retrie
     """
     for attempt in range(max_retries):
         try:
-            if isinstance(pdf_file, str):
-                with open(pdf_file, 'rb') as file:
-                    reader = PdfReader(file)
-            else:
-                reader = PdfReader(pdf_file)
+            with open(pdf_file, 'rb') as file:
+                reader = PdfReader(file)
             
             text = ""
             total_pages = len(reader.pages)
