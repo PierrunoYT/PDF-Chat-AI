@@ -1,14 +1,10 @@
-from sentence_transformers import SentenceTransformer
+from openai import OpenAI
 import numpy as np
-from openrouter_client import OpenRouterClient
 
 class EmbeddingModel:
-    def __init__(self, model_name='all-MiniLM-L6-v2', use_openrouter=False):
-        self.use_openrouter = use_openrouter
-        if use_openrouter:
-            self.openrouter_client = OpenRouterClient()
-        else:
-            self.model = SentenceTransformer(model_name)
+    def __init__(self, model_name='text-embedding-3-small'):
+        self.client = OpenAI()
+        self.model_name = model_name
 
     def get_embedding(self, text):
         """
@@ -17,10 +13,8 @@ class EmbeddingModel:
         :param text: Input text string
         :return: Numpy array representing the embedding
         """
-        if self.use_openrouter:
-            return np.array(self.openrouter_client.generate_embedding(text))
-        else:
-            return self.model.encode(text)
+        text = text.replace("\n", " ")
+        return np.array(self.client.embeddings.create(input=[text], model=self.model_name).data[0].embedding)
 
     def get_embeddings(self, texts):
         """
@@ -29,10 +23,9 @@ class EmbeddingModel:
         :param texts: List of input text strings
         :return: List of numpy arrays representing the embeddings
         """
-        if self.use_openrouter:
-            return [np.array(self.openrouter_client.generate_embedding(text)) for text in texts]
-        else:
-            return self.model.encode(texts)
+        texts = [text.replace("\n", " ") for text in texts]
+        embeddings = self.client.embeddings.create(input=texts, model=self.model_name).data
+        return [np.array(embedding.embedding) for embedding in embeddings]
 
     def cosine_similarity(self, embedding1, embedding2):
         """
@@ -50,8 +43,4 @@ class EmbeddingModel:
         
         :return: Integer representing the embedding dimension
         """
-        if self.use_openrouter:
-            # OpenAI's text-embedding-3-small model produces 1536-dimensional embeddings by default
-            return 1536
-        else:
-            return self.model.get_sentence_embedding_dimension()
+        return 1536  # OpenAI's text-embedding-3-small model produces 1536-dimensional embeddings
