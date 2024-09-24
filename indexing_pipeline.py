@@ -51,6 +51,17 @@ class IndexingPipeline:
         
         return ranked_results
 
+    def get_top_k_relevant_chunks(self, query_text, k=5):
+        """
+        Return the top-k most relevant chunks for a given query.
+        
+        :param query_text: Input query string
+        :param k: Number of top chunks to return (default: 5)
+        :return: List of tuples containing (chunk, relevance_score)
+        """
+        ranked_results = self.search_similar_chunks(query_text, k)
+        return [(chunk, relevance_score) for chunk, _, relevance_score in ranked_results[:k]]
+
     def load_index(self):
         self.faiss_manager.load_index(self.faiss_index_file)
 
@@ -73,11 +84,10 @@ if __name__ == "__main__":
     ]
 
     for query in queries:
-        print(f"\nSearch results for query: '{query}'")
-        ranked_results = pipeline.search_similar_chunks(query, k=5)
-        for i, (chunk, distance, relevance_score) in enumerate(ranked_results, 1):
+        print(f"\nTop 5 most relevant chunks for query: '{query}'")
+        top_chunks = pipeline.get_top_k_relevant_chunks(query, k=5)
+        for i, (chunk, relevance_score) in enumerate(top_chunks, 1):
             print(f"Result {i}:")
             print(f"Relevance Score: {relevance_score:.4f}")
-            print(f"Distance: {distance:.4f}")
             print(f"Chunk: {chunk[:200]}...")  # Print first 200 characters of the chunk
             print()
