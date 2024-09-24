@@ -32,3 +32,11 @@ class EmbeddingModel:
         :return: Cosine similarity score
         """
         return np.dot(embedding1, embedding2) / (np.linalg.norm(embedding1) * np.linalg.norm(embedding2))
+
+    def get_embedding_dimension(self):
+        """
+        Get the dimension of the embeddings produced by this model.
+        
+        :return: Integer representing the embedding dimension
+        """
+        return self.model.get_sentence_embedding_dimension()

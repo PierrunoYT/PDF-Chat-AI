@@ -8,6 +8,7 @@ from nltk.tokenize import word_tokenize
 from database_manager import DatabaseManager
 from embedding_model import EmbeddingModel
 from text_chunker import TextChunker
+from faiss_manager import FAISSManager
 import numpy as np
 
 # This function is now redundant and can be removed
@@ -37,7 +38,7 @@ def clean_and_preprocess_text(text):
     
     return cleaned_text
 
-def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
+def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200, use_faiss=True):
     """
     Process multiple PDF files in a directory, store results in a database, and generate embeddings for text chunks.
     
@@ -62,6 +63,10 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
     db_manager = DatabaseManager()
     embedding_model = EmbeddingModel()
     text_chunker = TextChunker(chunk_size, chunk_overlap)
+
+    if use_faiss:
+        faiss_manager = FAISSManager(embedding_model.get_embedding_dimension())
+        db_manager.set_faiss_manager(faiss_manager)
     
     for i, filename in enumerate(pdf_files, 1):
         file_path = os.path.join(directory, filename)
@@ -84,6 +89,9 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
             failed_extractions += 1
     
     db_manager.close()
+
+    if use_faiss:
+        faiss_manager.save_index('pdf_embeddings.faiss')
     
     print(f"\nProcessing Summary:")
     print(f"Total PDFs processed: {total_files}")
