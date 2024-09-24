@@ -1,7 +1,12 @@
 from celery import Celery
 from indexing_pipeline import IndexingPipeline
+import os
+from dotenv import load_dotenv
 
-celery = Celery('tasks', broker='redis://localhost:6379/0')
+load_dotenv()
+
+redis_url = f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', '6379')}/{os.getenv('REDIS_DB', '0')}"
+celery = Celery('tasks', broker=redis_url, backend=redis_url)
 
 @celery.task
 def run_indexing_pipeline(save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
