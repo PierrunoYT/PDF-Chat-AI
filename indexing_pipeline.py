@@ -84,7 +84,8 @@ class IndexingPipeline:
         :param k: Number of top chunks to use for context (default: 5)
         :return: Generated response string
         """
-        top_chunks = self.get_top_k_relevant_chunks(query_text, k)
+        processed_query = self.query_processor.process_query(query_text, conversation_history)
+        top_chunks = self.get_top_k_relevant_chunks(processed_query, k)
         prompt = self.query_processor.generate_context_aware_prompt(query_text, top_chunks, conversation_history)
         
         messages = [

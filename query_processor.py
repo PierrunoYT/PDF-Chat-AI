@@ -46,14 +46,37 @@ class QueryProcessor:
                         expanded_tokens.append(lemma.name())
         return expanded_tokens
 
-    def process_query(self, query):
+    def combine_with_context(self, query, conversation_history, max_context_length=5):
         """
-        Process the query by preprocessing and expanding it.
+        Combine the current query with previous context from the conversation history.
+        
+        :param query: Current query string
+        :param conversation_history: List of previous messages in the conversation
+        :param max_context_length: Maximum number of previous messages to include
+        :return: Combined query string
+        """
+        context = []
+        for message in reversed(conversation_history[-max_context_length:]):
+            if message['role'] == 'user':
+                context.append(message['content'])
+        
+        context.append(query)
+        return ' '.join(context)
+
+    def process_query(self, query, conversation_history=None):
+        """
+        Process the query by preprocessing, expanding, and combining with previous context.
         
         :param query: Input query string
+        :param conversation_history: List of previous messages in the conversation
         :return: Processed query string
         """
-        preprocessed_tokens = self.preprocess_query(query)
+        if conversation_history:
+            combined_query = self.combine_with_context(query, conversation_history)
+        else:
+            combined_query = query
+        
+        preprocessed_tokens = self.preprocess_query(combined_query)
         expanded_tokens = self.expand_query(preprocessed_tokens)
         return ' '.join(expanded_tokens)
 
