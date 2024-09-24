@@ -1,12 +1,14 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, session
 from celery_tasks import run_indexing_pipeline, generate_context_aware_response
 import os
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+import uuid
 
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', os.urandom(24))
 app.config['UPLOAD_FOLDER'] = os.getenv('PDF_DIRECTORY')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
 
@@ -72,6 +74,18 @@ def task_status(task_id):
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/conversation', methods=['POST'])
+def conversation():
+    if 'conversation_id' not in session:
+        session['conversation_id'] = str(uuid.uuid4())
+        session['conversation_history'] = []
+
+    query = request.form['query']
+    session['conversation_history'].append({"role": "user", "content": query})
+
+    task = generate_context_aware_response.delay(query, session['conversation_history'])
+    return jsonify({'task_id': task.id}), 202
 
 if __name__ == '__main__':
     app.run(debug=True)

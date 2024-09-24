@@ -75,32 +75,26 @@ class IndexingPipeline:
         ranked_results = self.search_similar_chunks(query_text, k)
         return [(chunk, relevance_score) for chunk, _, relevance_score in ranked_results[:k]]
 
-    def generate_context_aware_response(self, query_text, k=5):
+    def generate_context_aware_response(self, query_text, conversation_history, k=5):
         """
         Generate a context-aware response for the given query using OpenRouter.
         
         :param query_text: Input query string
+        :param conversation_history: List of previous messages in the conversation
         :param k: Number of top chunks to use for context (default: 5)
         :return: Generated response string
         """
         top_chunks = self.get_top_k_relevant_chunks(query_text, k)
-        prompt = self.query_processor.generate_context_aware_prompt(query_text, top_chunks)
+        prompt = self.query_processor.generate_context_aware_prompt(query_text, top_chunks, conversation_history)
         
         messages = [
             {"role": "system", "content": "You are a helpful AI assistant that provides accurate and relevant information based on the given context."},
+        ] + conversation_history + [
             {"role": "user", "content": prompt}
         ]
         
-        initial_response = self.openrouter_client.chat_completion(messages)
-        
-        refinement_prompt = self.query_processor.generate_refinement_prompt(initial_response, query_text, top_chunks)
-        refinement_messages = [
-            {"role": "system", "content": "You are a helpful AI assistant that refines responses to ensure accuracy and relevance."},
-            {"role": "user", "content": refinement_prompt}
-        ]
-        
-        refined_response = self.openrouter_client.chat_completion(refinement_messages)
-        return refined_response
+        response = self.openrouter_client.chat_completion(messages)
+        return response
 
     def load_index(self):
         self.faiss_manager.load_index(self.faiss_index_file)

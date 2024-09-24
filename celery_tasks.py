@@ -17,7 +17,7 @@ def run_indexing_pipeline(save_to_file=False, keyword_filter=None, max_pages=Non
     return f'Indexed {len(results)} PDF files successfully.'
 
 @celery.task
-def generate_context_aware_response(query_text, k=5):
+def generate_context_aware_response(query_text, conversation_history, k=5):
     pipeline = IndexingPipeline()
-    response = pipeline.generate_context_aware_response(query_text, k)
+    response = pipeline.generate_context_aware_response(query_text, conversation_history, k)
     return response

@@ -91,15 +91,16 @@ class QueryProcessor:
         
         return relevance_score
 
-    def generate_context_aware_prompt(self, query, context_chunks):
+    def generate_context_aware_prompt(self, query, context_chunks, conversation_history):
         """
-        Generate a context-aware prompt for the given query and context chunks.
+        Generate a context-aware prompt for the given query, context chunks, and conversation history.
         
         :param query: Original query string
         :param context_chunks: List of (chunk, relevance_score) tuples
+        :param conversation_history: List of previous messages in the conversation
         :return: Context-aware prompt string
         """
-        return self.prompt_engineer.generate_prompt(query, context_chunks)
+        return self.prompt_engineer.generate_prompt(query, context_chunks, conversation_history)
 
     def generate_refinement_prompt(self, response, query, context_chunks):
         """

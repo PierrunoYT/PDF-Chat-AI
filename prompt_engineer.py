@@ -4,8 +4,10 @@ class PromptEngineer:
         Your goal is to synthesize information from the provided context and answer the user's query in a clear and concise manner. 
         If the context doesn't contain enough information to answer the query, say so honestly."""
 
-    def generate_prompt(self, query, context_chunks):
+    def generate_prompt(self, query, context_chunks, conversation_history):
         context = "\n\n".join(chunk for chunk, _ in context_chunks)
+        
+        conversation = "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in conversation_history])
         
         prompt = f"""
         {self.system_prompt}
@@ -13,9 +15,12 @@ class PromptEngineer:
         Context:
         {context}
 
+        Conversation History:
+        {conversation}
+
         User Query: {query}
 
-        Assistant: Based on the provided context, I can answer your query as follows:
+        Assistant: Based on the provided context and conversation history, I can answer your query as follows:
         """
         
         return prompt
