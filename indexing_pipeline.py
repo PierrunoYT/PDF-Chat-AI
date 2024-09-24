@@ -13,9 +13,9 @@ load_dotenv()
 class IndexingPipeline:
     def __init__(self):
         self.db_manager = DatabaseManager(os.getenv('DB_NAME'))
-        use_openrouter = os.getenv('USE_OPENROUTER')
+        use_openrouter = os.getenv('USE_OPENROUTER', 'false')
         self.embedding_model = EmbeddingModel(
-            use_openrouter=use_openrouter.lower() == 'true' if use_openrouter is not None else False,
+            use_openrouter=use_openrouter.lower() == 'true',
             model_name=os.getenv('OPENAI_EMBEDDING_MODEL', 'openai/text-embedding-3-small')
         )
         self.faiss_manager = FAISSManager(self.embedding_model.get_embedding_dimension())
