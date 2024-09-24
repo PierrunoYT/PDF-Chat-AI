@@ -3,6 +3,7 @@ from pdf_processor import process_multiple_pdfs
 from database_manager import DatabaseManager
 from embedding_model import EmbeddingModel
 from faiss_manager import FAISSManager
+from query_processor import QueryProcessor
 
 class IndexingPipeline:
     def __init__(self, pdf_directory, db_name='pdf_extracts.db', faiss_index_file='pdf_embeddings.faiss'):
@@ -12,6 +13,7 @@ class IndexingPipeline:
         self.faiss_manager = FAISSManager(self.embedding_model.get_embedding_dimension())
         self.db_manager.set_faiss_manager(self.faiss_manager)
         self.faiss_index_file = faiss_index_file
+        self.query_processor = QueryProcessor()
 
     def run(self, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
         results = process_multiple_pdfs(
@@ -34,7 +36,8 @@ class IndexingPipeline:
         return results
 
     def search_similar_chunks(self, query_text, k=5):
-        query_vector = self.embedding_model.get_embedding(query_text)
+        processed_query = self.query_processor.process_query(query_text)
+        query_vector = self.embedding_model.get_embedding(processed_query)
         return self.db_manager.search_similar_chunks(query_vector, k)
 
 if __name__ == "__main__":
