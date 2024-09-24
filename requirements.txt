@@ -1,0 +1,5 @@
+PyPDF2
+nltk
+sentence_transformers
+faiss-cpu
+numpy
