@@ -1,12 +1,15 @@
 import requests
 import os
 from typing import List, Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class OpenRouterClient:
-    def __init__(self, api_key: str = None, site_url: str = None, site_name: str = None):
-        self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
+    def __init__(self, site_url: str = None, site_name: str = None):
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
         if not self.api_key:
-            raise ValueError("OpenRouter API key is required. Set it as an environment variable OPENROUTER_API_KEY or pass it to the constructor.")
+            raise ValueError("OpenRouter API key is required. Set it in the .env file as OPENROUTER_API_KEY.")
         self.base_url = "https://openrouter.ai/api/v1"
         self.site_url = site_url
         self.site_name = site_name

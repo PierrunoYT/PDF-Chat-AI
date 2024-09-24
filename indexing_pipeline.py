@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from pdf_processor import process_multiple_pdfs
 from database_manager import DatabaseManager
 from embedding_model import EmbeddingModel
@@ -7,16 +8,26 @@ from faiss_manager import FAISSManager
 from query_processor import QueryProcessor
 from openrouter_client import OpenRouterClient
 
+load_dotenv()
+
 class IndexingPipeline:
-    def __init__(self, pdf_directory, db_name='pdf_extracts.db', faiss_index_file='pdf_embeddings.faiss', use_openrouter=True, site_url=None, site_name=None):
-        self.pdf_directory = pdf_directory
-        self.db_manager = DatabaseManager(db_name)
-        self.embedding_model = EmbeddingModel(use_openrouter=use_openrouter, site_url=site_url, site_name=site_name)
+    def __init__(self):
+        self.pdf_directory = os.getenv('PDF_DIRECTORY')
+        self.db_manager = DatabaseManager(os.getenv('DB_NAME'))
+        self.embedding_model = EmbeddingModel(
+            use_openrouter=os.getenv('USE_OPENROUTER', 'True').lower() == 'true',
+            site_url=os.getenv('SITE_URL'),
+            site_name=os.getenv('SITE_NAME'),
+            model_name=os.getenv('LOCAL_MODEL_NAME')
+        )
         self.faiss_manager = FAISSManager(self.embedding_model.get_embedding_dimension())
         self.db_manager.set_faiss_manager(self.faiss_manager)
-        self.faiss_index_file = faiss_index_file
+        self.faiss_index_file = os.getenv('FAISS_INDEX_FILE')
         self.query_processor = QueryProcessor(self.embedding_model)
-        self.openrouter_client = OpenRouterClient(site_url=site_url, site_name=site_name)
+        self.openrouter_client = OpenRouterClient(
+            site_url=os.getenv('SITE_URL'),
+            site_name=os.getenv('SITE_NAME')
+        )
 
     def run(self, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
         results = process_multiple_pdfs(
@@ -95,14 +106,17 @@ class IndexingPipeline:
         self.faiss_manager.load_index(self.faiss_index_file)
 
 if __name__ == "__main__":
-    pdf_directory = "path/to/your/pdf/directory"
-    use_openrouter = True  # Set this to True to use OpenRouter
-    site_url = "https://your-site-url.com"  # Replace with your actual site URL
-    site_name = "Your Site Name"  # Replace with your actual site name
-    pipeline = IndexingPipeline(pdf_directory, use_openrouter=use_openrouter, site_url=site_url, site_name=site_name)
+    pipeline = IndexingPipeline()
 
     # Run the indexing process
-    results = pipeline.run(save_to_file=True, keyword_filter="report", max_pages=10, clean_text=True)
+    results = pipeline.run(
+        save_to_file=True,
+        keyword_filter="report",
+        max_pages=10,
+        clean_text=True,
+        chunk_size=int(os.getenv('CHUNK_SIZE', 1000)),
+        chunk_overlap=int(os.getenv('CHUNK_OVERLAP', 200))
+    )
     print(f"\nProcessed {len(results)} PDF files successfully.")
 
     # Load the saved index (if you're running the search separately from indexing)
@@ -117,11 +131,11 @@ if __name__ == "__main__":
 
     for query in queries:
         print(f"\nQuery: '{query}'")
-        response = pipeline.generate_context_aware_response(query, k=5)
+        response = pipeline.generate_context_aware_response(query, k=int(os.getenv('TOP_K_RESULTS', 5)))
         print("Context-aware response:")
         print(response)
-        print("\nTop 5 most relevant chunks:")
-        top_chunks = pipeline.get_top_k_relevant_chunks(query, k=5)
+        print("\nTop most relevant chunks:")
+        top_chunks = pipeline.get_top_k_relevant_chunks(query, k=int(os.getenv('TOP_K_RESULTS', 5)))
         for i, (chunk, relevance_score) in enumerate(top_chunks, 1):
             print(f"Result {i}:")
             print(f"Relevance Score: {relevance_score:.4f}")
