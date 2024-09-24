@@ -29,8 +29,10 @@ class EmbeddingModel:
         :return: Numpy array representing the embedding
         """
         text = text.replace("\n", " ")
-        if OPENAI_AVAILABLE:
+        if OPENAI_AVAILABLE and not self.use_openrouter:
             return np.array(self.client.embeddings.create(input=[text], model=self.model_name).data[0].embedding)
+        elif self.use_openrouter:
+            return np.array(self.openrouter_client.generate_embedding(text, model=self.model_name))
         else:
             return self._fallback_embedding(text)
 
