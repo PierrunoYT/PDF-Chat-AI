@@ -48,8 +48,6 @@ This project provides a comprehensive system for processing PDF files, extractin
    Create a `.env` file in the project root and add the following variables:
    ```
    OPENROUTER_API_KEY=your_openrouter_api_key_here
-   SITE_URL=https://your-site-url.com
-   SITE_NAME=Your Site Name
    DB_NAME=pdf_extracts.db
    FAISS_INDEX_FILE=pdf_embeddings.faiss
    PDF_DIRECTORY=path/to/your/pdf/directory

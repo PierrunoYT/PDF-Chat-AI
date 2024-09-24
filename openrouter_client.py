@@ -27,10 +27,6 @@ class OpenRouterClient:
             "Content-Type": "application/json"
         }
         
-        if self.site_url:
-            headers["HTTP-Referer"] = self.site_url
-        if self.site_name:
-            headers["X-Title"] = self.site_name
 
         data = {
             "model": model,

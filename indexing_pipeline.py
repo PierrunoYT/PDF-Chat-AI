@@ -16,18 +16,13 @@ class IndexingPipeline:
         self.db_manager = DatabaseManager(os.getenv('DB_NAME'))
         self.embedding_model = EmbeddingModel(
             use_openrouter=os.getenv('USE_OPENROUTER', 'True').lower() == 'true',
-            site_url=os.getenv('SITE_URL'),
-            site_name=os.getenv('SITE_NAME'),
             model_name=os.getenv('OPENAI_EMBEDDING_MODEL', 'openai/text-embedding-3-small')
         )
         self.faiss_manager = FAISSManager(self.embedding_model.get_embedding_dimension())
         self.db_manager.set_faiss_manager(self.faiss_manager)
         self.faiss_index_file = os.getenv('FAISS_INDEX_FILE')
         self.query_processor = QueryProcessor(self.embedding_model)
-        self.openrouter_client = OpenRouterClient(
-            site_url=os.getenv('SITE_URL'),
-            site_name=os.getenv('SITE_NAME')
-        )
+        self.openrouter_client = OpenRouterClient()
 
     def run(self, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
         results = process_multiple_pdfs(
