@@ -16,10 +16,10 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 # Dictionary to store task results
 task_results = {}
 
-def run_indexing_pipeline_task(task_id, pdf_file, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap):
+def run_indexing_pipeline_task(task_id, pdf_files, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap):
     pipeline = IndexingPipeline()
     results = pipeline.run(
-        pdf_files=[pdf_file],
+        pdf_files=pdf_files,
         save_to_file=save_to_file,
         keyword_filter=keyword_filter,
         max_pages=max_pages,
@@ -56,9 +56,10 @@ def upload_file():
 @app.route('/index_pdfs', methods=['POST'])
 def index_pdfs():
     task_id = str(uuid.uuid4())
+    pdf_files = [os.path.join(app.config['UPLOAD_FOLDER'], f) for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.lower().endswith('.pdf')]
     thread = threading.Thread(target=run_indexing_pipeline_task, args=(
         task_id,
-        app.config['UPLOAD_FOLDER'],
+        pdf_files,
         True,
         request.form.get('keyword_filter'),
         int(request.form.get('max_pages', 10)),
