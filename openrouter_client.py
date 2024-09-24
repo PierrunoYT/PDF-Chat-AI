@@ -6,13 +6,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class OpenRouterClient:
-    def __init__(self, site_url: str = None, site_name: str = None):
+    def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenRouter API key is required. Set it in the .env file as OPENROUTER_API_KEY.")
         self.base_url = "https://openrouter.ai/api/v1"
-        self.site_url = site_url
-        self.site_name = site_name
 
     def chat_completion(self, messages: List[Dict[str, str]], model: str = "anthropic/claude-3.5-sonnet") -> str:
         """
