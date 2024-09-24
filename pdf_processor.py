@@ -1,6 +1,10 @@
 import os
+import re
+import string
 from PyPDF2 import PdfReader
 from PyPDF2.errors import PdfReadError
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
 def extract_text_from_pdf(pdf_path):
     """
@@ -15,12 +19,40 @@ def extract_text_from_pdf(pdf_path):
             text = ""
             for page in reader.pages:
                 text += page.extract_text() + "\n"
-        return text
+        if clean_text:
+            return clean_and_preprocess_text(text)
+        else:
+            return text
     except (IOError, PdfReadError) as e:
         print(f"Error processing {pdf_path}: {str(e)}")
         return None
 
-def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None):
+def clean_and_preprocess_text(text):
+    """
+    Clean and preprocess the extracted text.
+    
+    :param text: Input text string
+    :return: Cleaned and preprocessed text string
+    """
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Remove special characters and digits
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    
+    # Tokenize the text
+    tokens = word_tokenize(text)
+    
+    # Remove stopwords
+    stop_words = set(stopwords.words('english'))
+    tokens = [token for token in tokens if token not in stop_words]
+    
+    # Join the tokens back into a string
+    cleaned_text = ' '.join(tokens)
+    
+    return cleaned_text
+
+def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False):
     """
     Process multiple PDF files in a directory.
     
@@ -43,7 +75,7 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
         file_path = os.path.join(directory, filename)
         print(f"Processing {i}/{total_files}: {filename}")
         
-        text = extract_text_from_pdf(file_path, max_pages)
+        text = extract_text_from_pdf(file_path, max_pages, clean_text)
         if text:
             results[filename] = text
             successful_extractions += 1
@@ -61,7 +93,7 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
     
     return results
 
-def extract_text_from_pdf(pdf_path, max_pages=None):
+def extract_text_from_pdf(pdf_path, max_pages=None, clean_text=False):
     """
     Extract text from a single PDF file.
     
