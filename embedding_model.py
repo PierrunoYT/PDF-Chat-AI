@@ -8,13 +8,18 @@ except ImportError:
     print("OpenAI module not found. Using fallback embedding method.")
 
 class EmbeddingModel:
-    def __init__(self, model_name='text-embedding-3-small'):
+    def __init__(self, model_name='text-embedding-3-small', use_openrouter=False):
         self.model_name = model_name
-        if OPENAI_AVAILABLE:
+        self.use_openrouter = use_openrouter
+        if OPENAI_AVAILABLE and not use_openrouter:
             self.client = OpenAI()
         else:
             # Fallback to a simple embedding method
             self.dimension = 100
+        
+        if use_openrouter:
+            from openrouter_client import OpenRouterClient
+            self.openrouter_client = OpenRouterClient()
 
     def get_embedding(self, text):
         """
