@@ -86,10 +86,11 @@ def extract_text_from_pdf(pdf_file, max_pages=None, clean_text=False, max_retrie
     for attempt in range(max_retries):
         try:
             if isinstance(pdf_file, str):
-                with open(pdf_file, 'rb') as file:
-                    reader = PdfReader(file)
+                file = open(pdf_file, 'rb')
             else:
-                reader = PdfReader(pdf_file)
+                file = pdf_file
+            
+            reader = PdfReader(file)
             
             text = ""
             total_pages = len(reader.pages)
@@ -100,6 +101,9 @@ def extract_text_from_pdf(pdf_file, max_pages=None, clean_text=False, max_retrie
             if clean_text:
                 text = clean_and_preprocess_text(text)
             
+            if isinstance(pdf_file, str):
+                file.close()
+            
             return text, pages_to_process
         except (IOError, PdfReadError) as e:
             if attempt < max_retries - 1:
@@ -107,6 +111,8 @@ def extract_text_from_pdf(pdf_file, max_pages=None, clean_text=False, max_retrie
                 time.sleep(retry_delay)
             else:
                 logging.error(f"Failed to process PDF after {max_retries} attempts: {str(e)}")
+                if isinstance(pdf_file, str) and 'file' in locals():
+                    file.close()
     return None, None
 
 if __name__ == "__main__":
