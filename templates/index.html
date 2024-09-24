@@ -112,16 +112,14 @@
 
     <script>
         $(document).ready(function() {
-            let conversationId = null;
+            let conversationHistory = [];
 
             function updateConversationHistory() {
-                $.get('/conversation_history', function(data) {
-                    let historyHtml = '<h3>Konversationsverlauf:</h3>';
-                    data.conversation_history.forEach(function(message) {
-                        historyHtml += '<p><strong>' + message.role + ':</strong> ' + message.content + '</p>';
-                    });
-                    $('#conversationHistory').html(historyHtml);
+                let historyHtml = '<h3>Konversationsverlauf:</h3>';
+                conversationHistory.forEach(function(message) {
+                    historyHtml += '<p><strong>' + message.role + ':</strong> ' + message.content + '</p>';
                 });
+                $('#conversationHistory').html(historyHtml);
             }
 
             $('#uploadForm').submit(function(e) {
@@ -155,8 +153,12 @@
             $('#conversationForm').submit(function(e) {
                 e.preventDefault();
                 $('#result').html('<p>Verarbeitung läuft, bitte warten...</p>');
-                $.post('/conversation', $(this).serialize(), function(data) {
-                    conversationId = data.conversation_id;
+                let query = $('#query').val();
+                conversationHistory.push({"role": "user", "content": query});
+                $.post('/conversation', {
+                    query: query,
+                    conversation_history: JSON.stringify(conversationHistory)
+                }, function(data) {
                     checkTaskStatus(data.task_id, 'Konversation');
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     $('#result').html('<h3>Fehler beim Starten der Konversation:</h3><p>' + jqXHR.responseJSON.error + '</p>');
@@ -165,9 +167,9 @@
 
             $('#clearConversation').click(function() {
                 $.post('/clear_conversation', function(data) {
+                    conversationHistory = [];
                     $('#conversationHistory').html('');
                     $('#result').html('<p>' + data.message + '</p>');
-                    conversationId = null;
                 });
             });
 
@@ -180,6 +182,9 @@
                         }, 2000);
                     } else if (data.state === 'SUCCESS') {
                         $('#result').html('<h3>' + taskType + '-Ergebnis:</h3><p>' + data.result.response + '</p>');
+                        if (taskType === 'Konversation') {
+                            conversationHistory.push({"role": "assistant", "content": data.result.response});
+                        }
                         updateConversationHistory();
                     } else {
                         $('#result').html('<h3>Fehler bei der ' + taskType + ':</h3><p>' + data.status + '</p>');
@@ -189,7 +194,7 @@
                 });
             }
 
-            // Initial load of conversation history
+            // Initial update of conversation history
             updateConversationHistory();
         });
     </script>
