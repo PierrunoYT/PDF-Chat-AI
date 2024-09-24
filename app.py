@@ -1,15 +1,37 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
-from celery_tasks import run_indexing_pipeline, generate_context_aware_response
+from indexing_pipeline import IndexingPipeline
 import os
 import json
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+import threading
+import uuid
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
+
+# Dictionary to store task results
+task_results = {}
+
+def run_indexing_pipeline_task(task_id, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap):
+    pipeline = IndexingPipeline()
+    results = pipeline.run(
+        save_to_file=save_to_file,
+        keyword_filter=keyword_filter,
+        max_pages=max_pages,
+        clean_text=clean_text,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
+    )
+    task_results[task_id] = f'Indexed {len(results)} PDF files successfully.'
+
+def generate_context_aware_response_task(task_id, query_text, conversation_history, k=5):
+    pipeline = IndexingPipeline()
+    response = pipeline.generate_context_aware_response(query_text, conversation_history, k)
+    task_results[task_id] = {'response': response, 'conversation_history': conversation_history + [{"role": "assistant", "content": response}]}
 
 @app.route('/')
 def index():
@@ -35,42 +57,33 @@ def upload_file():
 @app.route('/search', methods=['POST'])
 def search():
     query = request.form['query']
-    task = generate_context_aware_response.delay(query)
-    return jsonify({'task_id': task.id}), 202
+    conversation_history = json.loads(request.form.get('conversation_history', '[]'))
+    task_id = str(uuid.uuid4())
+    thread = threading.Thread(target=generate_context_aware_response_task, args=(task_id, query, conversation_history))
+    thread.start()
+    return jsonify({'task_id': task_id}), 202
 
 @app.route('/index_pdfs', methods=['POST'])
 def index_pdfs():
-    task = run_indexing_pipeline.delay(
-        save_to_file=True,
-        keyword_filter=request.form.get('keyword_filter'),
-        max_pages=int(request.form.get('max_pages', 10)),
-        clean_text=request.form.get('clean_text', 'true').lower() == 'true',
-        chunk_size=int(request.form.get('chunk_size', os.getenv('CHUNK_SIZE', 1000))),
-        chunk_overlap=int(request.form.get('chunk_overlap', os.getenv('CHUNK_OVERLAP', 200)))
-    )
-    return jsonify({'task_id': task.id}), 202
+    task_id = str(uuid.uuid4())
+    thread = threading.Thread(target=run_indexing_pipeline_task, args=(
+        task_id,
+        True,
+        request.form.get('keyword_filter'),
+        int(request.form.get('max_pages', 10)),
+        request.form.get('clean_text', 'true').lower() == 'true',
+        int(request.form.get('chunk_size', os.getenv('CHUNK_SIZE', 1000))),
+        int(request.form.get('chunk_overlap', os.getenv('CHUNK_OVERLAP', 200)))
+    ))
+    thread.start()
+    return jsonify({'task_id': task_id}), 202
 
 @app.route('/task_status/<task_id>')
 def task_status(task_id):
-    task = run_indexing_pipeline.AsyncResult(task_id)
-    if task.state == 'PENDING':
-        response = {
-            'state': task.state,
-            'status': 'Task is pending...'
-        }
-    elif task.state != 'FAILURE':
-        response = {
-            'state': task.state,
-            'status': task.info.get('status', '')
-        }
-        if 'result' in task.info:
-            response['result'] = task.info['result']
+    if task_id in task_results:
+        return jsonify({'state': 'SUCCESS', 'result': task_results[task_id]})
     else:
-        response = {
-            'state': task.state,
-            'status': str(task.info)
-        }
-    return jsonify(response)
+        return jsonify({'state': 'PENDING', 'status': 'Task is pending...'})
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -79,12 +92,13 @@ def uploaded_file(filename):
 @app.route('/conversation', methods=['POST'])
 def conversation():
     query = request.form['query']
-    conversation_history = request.form.get('conversation_history', '[]')
-    conversation_history = json.loads(conversation_history)
+    conversation_history = json.loads(request.form.get('conversation_history', '[]'))
     conversation_history.append({"role": "user", "content": query})
 
-    task = generate_context_aware_response.delay(query, conversation_history)
-    return jsonify({'task_id': task.id}), 202
+    task_id = str(uuid.uuid4())
+    thread = threading.Thread(target=generate_context_aware_response_task, args=(task_id, query, conversation_history))
+    thread.start()
+    return jsonify({'task_id': task_id}), 202
 
 @app.route('/clear_conversation', methods=['POST'])
 def clear_conversation():

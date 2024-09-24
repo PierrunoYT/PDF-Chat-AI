@@ -6,6 +6,4 @@ numpy
 requests
 python-dotenv
 Flask
-celery
-redis
 openai

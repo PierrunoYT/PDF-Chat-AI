@@ -11,14 +11,12 @@ This project provides a comprehensive system for processing PDF files, extractin
 - Use FAISS for efficient similarity search
 - Perform context-aware querying with conversation history
 - Web interface for uploading PDFs, indexing, and querying
-- Asynchronous task processing with Celery and Redis
+- Asynchronous task processing using Python's threading module
 
 ## Requirements
 
 - Python 3.7+
 - Flask
-- Celery
-- Redis
 - PyPDF2
 - NLTK
 - sentence-transformers
@@ -45,39 +43,18 @@ This project provides a comprehensive system for processing PDF files, extractin
    ```
 
 4. Set up environment variables:
-   Create a `.env` file in the project root and add the following variables:
-   ```
-   OPENROUTER_API_KEY=your_openrouter_api_key_here
-   DB_NAME=pdf_extracts.db
-   FAISS_INDEX_FILE=pdf_embeddings.faiss
-   PDF_DIRECTORY=path/to/your/pdf/directory
-   USE_OPENROUTER=True
-   LOCAL_MODEL_NAME=all-MiniLM-L6-v2
-   OPENAI_EMBEDDING_MODEL=openai/text-embedding-3-small
-   EMBEDDING_DIMENSIONS=1536
-   CHUNK_SIZE=1000
-   CHUNK_OVERLAP=200
-   TOP_K_RESULTS=5
-   ```
-
-5. Set up Redis:
-   Make sure Redis is installed and running on your system.
+   Create a `.env` file in the project root and add the necessary variables.
 
 ## Usage
 
-1. Start the Celery worker:
-   ```
-   celery -A celery_tasks worker --loglevel=info
-   ```
-
-2. Run the Flask application:
+1. Run the Flask application:
    ```
    python app.py
    ```
 
-3. Open a web browser and navigate to `http://localhost:5000` to access the web interface.
+2. Open a web browser and navigate to `http://localhost:5000` to access the web interface.
 
-4. Use the web interface to:
+3. Use the web interface to:
    - Upload PDF files
    - Index PDF files
    - Perform context-aware queries
@@ -86,7 +63,6 @@ This project provides a comprehensive system for processing PDF files, extractin
 ## File Descriptions
 
 - `app.py`: Flask application for the web interface
-- `celery_tasks.py`: Celery tasks for asynchronous processing
 - `indexing_pipeline.py`: Main pipeline for processing and indexing PDFs
 - `pdf_processor.py`: Functions for extracting text from PDFs
 - `database_manager.py`: Manages the SQLite database
