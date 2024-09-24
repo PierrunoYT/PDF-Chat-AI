@@ -46,14 +46,26 @@ class IndexingPipeline:
 if __name__ == "__main__":
     pdf_directory = "path/to/your/pdf/directory"
     pipeline = IndexingPipeline(pdf_directory)
+
+    # Run the indexing process
     results = pipeline.run(save_to_file=True, keyword_filter="report", max_pages=10, clean_text=True)
     print(f"\nProcessed {len(results)} PDF files successfully.")
 
-    # Example search
-    query = "Example search query"
-    similar_chunks = pipeline.search_similar_chunks(query)
-    print(f"\nSimilar chunks for query '{query}':")
-    for chunk, distance in similar_chunks:
-        print(f"Distance: {distance:.4f}")
-        print(f"Chunk: {chunk[:100]}...")  # Print first 100 characters of the chunk
-        print()
+    # Load the saved index (if you're running the search separately from indexing)
+    pipeline.load_index()
+
+    # Example searches
+    queries = [
+        "What are the main benefits of renewable energy?",
+        "Discuss the challenges in implementing artificial intelligence in healthcare.",
+        "Explain the impact of climate change on biodiversity."
+    ]
+
+    for query in queries:
+        print(f"\nSearch results for query: '{query}'")
+        similar_chunks = pipeline.search_similar_chunks(query, k=3)
+        for i, (chunk, distance) in enumerate(similar_chunks, 1):
+            print(f"Result {i}:")
+            print(f"Distance: {distance:.4f}")
+            print(f"Chunk: {chunk[:200]}...")  # Print first 200 characters of the chunk
+            print()
