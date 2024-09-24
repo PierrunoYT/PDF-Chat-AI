@@ -22,18 +22,18 @@ class DatabaseManager:
         ''')
         self.conn.commit()
 
-    def insert_pdf_extract(self, filename, extracted_text, page_count, cleaned, embedding):
+    def insert_pdf_extract(self, filename, extracted_text, page_count, cleaned, chunk_embeddings):
         self.cursor.execute('''
         INSERT INTO pdf_extracts (filename, extracted_text, page_count, extraction_date, cleaned, embedding)
         VALUES (?, ?, ?, ?, ?, ?)
-        ''', (filename, extracted_text, page_count, datetime.now(), cleaned, json.dumps(embedding)))
+        ''', (filename, extracted_text, page_count, datetime.now(), cleaned, json.dumps(chunk_embeddings)))
         self.conn.commit()
 
     def get_pdf_extract(self, filename):
         self.cursor.execute('SELECT * FROM pdf_extracts WHERE filename = ?', (filename,))
         result = self.cursor.fetchone()
         if result:
-            # Convert the embedding back to a list
+            # Convert the chunk embeddings back to a list of lists
             result = list(result)
             result[6] = json.loads(result[6])
         return result

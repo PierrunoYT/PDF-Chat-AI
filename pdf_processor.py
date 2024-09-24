@@ -7,6 +7,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from database_manager import DatabaseManager
 from embedding_model import EmbeddingModel
+from text_chunker import TextChunker
 
 # This function is now redundant and can be removed
 
@@ -35,16 +36,18 @@ def clean_and_preprocess_text(text):
     
     return cleaned_text
 
-def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False):
+def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
     """
-    Process multiple PDF files in a directory, store results in a database, and generate embeddings.
+    Process multiple PDF files in a directory, store results in a database, and generate embeddings for text chunks.
     
     :param directory: Path to the directory containing PDF files
     :param save_to_file: If True, save extracted text to individual text files
     :param keyword_filter: If provided, only process PDFs with this keyword in the filename
     :param max_pages: If provided, limit the number of pages processed per PDF
     :param clean_text: If True, clean and preprocess the extracted text
-    :return: Dictionary with PDF filenames as keys and tuples of (extracted text, embedding) as values
+    :param chunk_size: Size of text chunks for embedding
+    :param chunk_overlap: Overlap between text chunks
+    :return: Dictionary with PDF filenames as keys and lists of tuples (chunk_text, chunk_embedding) as values
     """
     results = {}
     pdf_files = [f for f in os.listdir(directory) if f.endswith(".pdf")]
@@ -57,6 +60,7 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
     
     db_manager = DatabaseManager()
     embedding_model = EmbeddingModel()
+    text_chunker = TextChunker(chunk_size, chunk_overlap)
     
     for i, filename in enumerate(pdf_files, 1):
         file_path = os.path.join(directory, filename)
@@ -64,8 +68,13 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
         
         text, page_count = extract_text_from_pdf(file_path, max_pages, clean_text)
         if text:
-            embedding = embedding_model.get_embedding(text)
-            results[filename] = (text, embedding)
+            chunks = text_chunker.chunk_text(text)
+            chunk_embeddings = []
+            for chunk in chunks:
+                embedding = embedding_model.get_embedding(chunk)
+                chunk_embeddings.append((chunk, embedding))
+            
+            results[filename] = chunk_embeddings
             successful_extractions += 1
             if save_to_file:
                 output_path = os.path.join(directory, f"{os.path.splitext(filename)[0]}.txt")
@@ -73,7 +82,7 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
                     out_file.write(text)
             
             # Store in database
-            db_manager.insert_pdf_extract(filename, text, page_count, clean_text, embedding.tolist())
+            db_manager.insert_pdf_extract(filename, text, page_count, clean_text, [emb.tolist() for _, emb in chunk_embeddings])
         else:
             failed_extractions += 1
     
