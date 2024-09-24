@@ -38,7 +38,18 @@ class IndexingPipeline:
 
     def search_similar_chunks(self, query_text, k=5):
         query_vector = self.query_processor.query_to_embedding(query_text)
-        return self.faiss_manager.search(query_vector, k)
+        similar_chunks = self.faiss_manager.search(query_vector, k)
+        
+        # Calculate relevance scores and rank results
+        ranked_results = []
+        for chunk, distance in similar_chunks:
+            relevance_score = self.query_processor.calculate_relevance_score(query_text, chunk, distance)
+            ranked_results.append((chunk, distance, relevance_score))
+        
+        # Sort results by relevance score in descending order
+        ranked_results.sort(key=lambda x: x[2], reverse=True)
+        
+        return ranked_results
 
     def load_index(self):
         self.faiss_manager.load_index(self.faiss_index_file)
@@ -63,9 +74,10 @@ if __name__ == "__main__":
 
     for query in queries:
         print(f"\nSearch results for query: '{query}'")
-        similar_chunks = pipeline.search_similar_chunks(query, k=3)
-        for i, (chunk, distance) in enumerate(similar_chunks, 1):
+        ranked_results = pipeline.search_similar_chunks(query, k=5)
+        for i, (chunk, distance, relevance_score) in enumerate(ranked_results, 1):
             print(f"Result {i}:")
+            print(f"Relevance Score: {relevance_score:.4f}")
             print(f"Distance: {distance:.4f}")
             print(f"Chunk: {chunk[:200]}...")  # Print first 200 characters of the chunk
             print()

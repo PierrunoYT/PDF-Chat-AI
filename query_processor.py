@@ -2,6 +2,8 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 import string
+import numpy as np
+
 class QueryProcessor:
     def __init__(self, embedding_model):
         self.stop_words = set(stopwords.words('english'))
@@ -62,3 +64,27 @@ class QueryProcessor:
         """
         processed_query = self.process_query(query)
         return self.embedding_model.get_embedding(processed_query)
+
+    def calculate_relevance_score(self, query, chunk, distance):
+        """
+        Calculate the relevance score of a chunk based on the query.
+        
+        :param query: Original query string
+        :param chunk: Retrieved text chunk
+        :param distance: Distance score from FAISS
+        :return: Relevance score
+        """
+        # Preprocess query and chunk
+        query_tokens = set(self.preprocess_query(query))
+        chunk_tokens = set(self.preprocess_query(chunk))
+        
+        # Calculate token overlap
+        token_overlap = len(query_tokens.intersection(chunk_tokens)) / len(query_tokens)
+        
+        # Calculate semantic similarity (inverse of distance)
+        semantic_similarity = 1 / (1 + distance)
+        
+        # Combine scores (you can adjust weights as needed)
+        relevance_score = 0.5 * token_overlap + 0.5 * semantic_similarity
+        
+        return relevance_score
