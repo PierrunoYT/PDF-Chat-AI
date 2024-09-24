@@ -100,30 +100,34 @@ def process_multiple_pdfs(pdf_files, save_to_file=False, keyword_filter=None, ma
     
     return results
 
-def extract_text_from_pdf(pdf_path, max_pages=None, clean_text=False):
+def extract_text_from_pdf(pdf_file, max_pages=None, clean_text=False):
     """
     Extract text from a single PDF file.
     
-    :param pdf_path: Path to the PDF file
+    :param pdf_file: File object or path to the PDF file
     :param max_pages: Maximum number of pages to process (None for all pages)
     :param clean_text: If True, clean and preprocess the extracted text
     :return: Tuple of (extracted text as a string, page count), or (None, None) if an error occurs
     """
     try:
-        with open(pdf_path, 'rb') as file:
-            reader = PdfReader(file)
-            text = ""
-            total_pages = len(reader.pages)
-            pages_to_process = min(total_pages, max_pages) if max_pages else total_pages
-            for i in range(pages_to_process):
-                text += reader.pages[i].extract_text() + "\n"
+        if isinstance(pdf_file, str):
+            with open(pdf_file, 'rb') as file:
+                reader = PdfReader(file)
+        else:
+            reader = PdfReader(pdf_file)
+        
+        text = ""
+        total_pages = len(reader.pages)
+        pages_to_process = min(total_pages, max_pages) if max_pages else total_pages
+        for i in range(pages_to_process):
+            text += reader.pages[i].extract_text() + "\n"
         
         if clean_text:
             text = clean_and_preprocess_text(text)
         
         return text, pages_to_process
     except (IOError, PdfReadError) as e:
-        print(f"Error processing {pdf_path}: {str(e)}")
+        print(f"Error processing PDF: {str(e)}")
         return None, None
 
 # Example usage:

@@ -36,7 +36,8 @@ class IndexingPipeline:
             use_faiss=True,
             db_manager=self.db_manager,
             embedding_model=self.embedding_model,
-            faiss_manager=self.faiss_manager
+            faiss_manager=self.faiss_manager,
+            in_memory=True
         )
         
         self.faiss_manager.save_index(self.faiss_index_file)
