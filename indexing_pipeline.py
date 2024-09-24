@@ -62,6 +62,24 @@ class IndexingPipeline:
         ranked_results = self.search_similar_chunks(query_text, k)
         return [(chunk, relevance_score) for chunk, _, relevance_score in ranked_results[:k]]
 
+    def generate_context_aware_response(self, query_text, k=5):
+        """
+        Generate a context-aware response for the given query.
+        
+        :param query_text: Input query string
+        :param k: Number of top chunks to use for context (default: 5)
+        :return: Generated response string
+        """
+        top_chunks = self.get_top_k_relevant_chunks(query_text, k)
+        prompt = self.query_processor.generate_context_aware_prompt(query_text, top_chunks)
+        
+        # In a real implementation, you would send this prompt to the AI model (e.g., OpenAI API)
+        # and get a response. For now, we'll just return a placeholder response.
+        initial_response = f"This is a placeholder response for the query: {query_text}"
+        
+        refined_response = self.query_processor.refine_response(initial_response, query_text, top_chunks)
+        return refined_response
+
     def load_index(self):
         self.faiss_manager.load_index(self.faiss_index_file)
 
@@ -87,7 +105,11 @@ if __name__ == "__main__":
     ]
 
     for query in queries:
-        print(f"\nTop 5 most relevant chunks for query: '{query}'")
+        print(f"\nQuery: '{query}'")
+        response = pipeline.generate_context_aware_response(query, k=5)
+        print("Context-aware response:")
+        print(response)
+        print("\nTop 5 most relevant chunks:")
         top_chunks = pipeline.get_top_k_relevant_chunks(query, k=5)
         for i, (chunk, relevance_score) in enumerate(top_chunks, 1):
             print(f"Result {i}:")

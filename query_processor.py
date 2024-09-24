@@ -3,12 +3,14 @@ from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 import string
 import numpy as np
+from prompt_engineer import PromptEngineer
 
 class QueryProcessor:
     def __init__(self, embedding_model):
         self.stop_words = set(stopwords.words('english'))
         self.lemmatizer = WordNetLemmatizer()
         self.embedding_model = embedding_model
+        self.prompt_engineer = PromptEngineer()
 
     def preprocess_query(self, query):
         """
@@ -88,3 +90,24 @@ class QueryProcessor:
         relevance_score = 0.5 * token_overlap + 0.5 * semantic_similarity
         
         return relevance_score
+
+    def generate_context_aware_prompt(self, query, context_chunks):
+        """
+        Generate a context-aware prompt for the given query and context chunks.
+        
+        :param query: Original query string
+        :param context_chunks: List of (chunk, relevance_score) tuples
+        :return: Context-aware prompt string
+        """
+        return self.prompt_engineer.generate_prompt(query, context_chunks)
+
+    def refine_response(self, response, query, context_chunks):
+        """
+        Refine the generated response based on the query and context.
+        
+        :param response: Initial response string
+        :param query: Original query string
+        :param context_chunks: List of (chunk, relevance_score) tuples
+        :return: Refined response string
+        """
+        return self.prompt_engineer.refine_response(response, query, context_chunks)
