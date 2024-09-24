@@ -17,7 +17,7 @@ task_results = {}
 def run_indexing_pipeline_task(task_id, pdf_file, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap):
     pipeline = IndexingPipeline()
     results = pipeline.run(
-        [pdf_file],
+        pdf_files=[pdf_file],
         save_to_file=save_to_file,
         keyword_filter=keyword_filter,
         max_pages=max_pages,
