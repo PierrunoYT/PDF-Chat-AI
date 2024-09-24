@@ -84,7 +84,7 @@ def process_multiple_pdfs(pdf_files, save_to_file=False, keyword_filter=None, ma
             results[filename] = list(zip(chunks, chunk_embeddings))
             successful_extractions += 1
             if save_to_file:
-                output_path = os.path.join(directory, f"{os.path.splitext(filename)[0]}.txt")
+                output_path = f"{os.path.splitext(file_path)[0]}.txt"
                 with open(output_path, 'w', encoding='utf-8') as out_file:
                     out_file.write(text)
             
