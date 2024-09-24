@@ -16,24 +16,18 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 # Dictionary to store task results
 task_results = {}
 
-def run_indexing_pipeline_task(task_id, pdf_files, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap):
+def run_indexing_pipeline_task(task_id, pdf_file, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap):
     pipeline = IndexingPipeline()
-    total_indexed = 0
-    for pdf_file in pdf_files:
-        try:
-            results = pipeline.run(
-                pdf_files=[pdf_file],
-                save_to_file=save_to_file,
-                keyword_filter=keyword_filter,
-                max_pages=max_pages,
-                clean_text=clean_text,
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap
-            )
-            total_indexed += len(results)
-        except Exception as e:
-            print(f"Error processing {pdf_file}: {str(e)}")
-    task_results[task_id] = f'Indexed {total_indexed} PDF files successfully.'
+    results = pipeline.run(
+        pdf_files=[pdf_file],
+        save_to_file=save_to_file,
+        keyword_filter=keyword_filter,
+        max_pages=max_pages,
+        clean_text=clean_text,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
+    )
+    task_results[task_id] = f'Indexed {len(results)} PDF files successfully.'
 
 def generate_context_aware_response_task(task_id, query_text, conversation_history, k=5):
     pipeline = IndexingPipeline()
@@ -62,10 +56,9 @@ def upload_file():
 @app.route('/index_pdfs', methods=['POST'])
 def index_pdfs():
     task_id = str(uuid.uuid4())
-    pdf_files = [os.path.join(app.config['UPLOAD_FOLDER'], f) for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.lower().endswith('.pdf')]
     thread = threading.Thread(target=run_indexing_pipeline_task, args=(
         task_id,
-        pdf_files,
+        app.config['UPLOAD_FOLDER'],
         True,
         request.form.get('keyword_filter'),
         int(request.form.get('max_pages', 10)),
