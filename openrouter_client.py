@@ -11,7 +11,7 @@ class OpenRouterClient:
         self.site_url = site_url
         self.site_name = site_name
 
-    def chat_completion(self, messages: List[Dict[str, str]], model: str = "openai/gpt-3.5-turbo") -> Dict[str, Any]:
+    def chat_completion(self, messages: List[Dict[str, str]], model: str = "anthropic/claude-3.5-sonnet") -> Dict[str, Any]:
         """
         Send a chat completion request to OpenRouter.
 
