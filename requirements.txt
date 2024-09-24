@@ -1,7 +1,7 @@
 PyPDF2
 nltk
 sentence-transformers
-faiss-cpu
+faiss-gpu
 numpy
 requests
 python-dotenv
