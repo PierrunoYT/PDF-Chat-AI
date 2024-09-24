@@ -18,7 +18,9 @@ task_results = {}
 
 def run_indexing_pipeline_task(task_id, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap):
     pipeline = IndexingPipeline()
+    pdf_files = [os.path.join(app.config['UPLOAD_FOLDER'], f) for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.lower().endswith('.pdf')]
     results = pipeline.run(
+        pdf_files,
         save_to_file=save_to_file,
         keyword_filter=keyword_filter,
         max_pages=max_pages,
