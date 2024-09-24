@@ -1,5 +1,5 @@
 from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 import string
 
@@ -13,7 +13,7 @@ class QueryProcessor:
         Preprocess the query by tokenizing, removing stopwords, and lemmatizing.
         
         :param query: Input query string
-        :return: Preprocessed query string
+        :return: Preprocessed query tokens
         """
         # Tokenize the query
         tokens = word_tokenize(query.lower())
@@ -24,23 +24,23 @@ class QueryProcessor:
         # Lemmatize the tokens
         lemmatized_tokens = [self.lemmatizer.lemmatize(token) for token in tokens]
         
-        # Join the tokens back into a string
-        preprocessed_query = ' '.join(lemmatized_tokens)
-        
-        return preprocessed_query
+        return lemmatized_tokens
 
-    def expand_query(self, query):
+    def expand_query(self, tokens):
         """
-        Expand the query with synonyms or related terms.
-        This is a placeholder function and can be implemented with more advanced NLP techniques.
+        Expand the query with synonyms or related terms using WordNet.
         
-        :param query: Input query string
-        :return: Expanded query string
+        :param tokens: List of preprocessed query tokens
+        :return: Expanded list of tokens
         """
-        # For now, we'll just return the original query
-        # In a more advanced implementation, you could use techniques like word embeddings
-        # or knowledge graphs to expand the query with related terms
-        return query
+        expanded_tokens = []
+        for token in tokens:
+            expanded_tokens.append(token)
+            for syn in wordnet.synsets(token):
+                for lemma in syn.lemmas():
+                    if lemma.name() != token and lemma.name() not in expanded_tokens:
+                        expanded_tokens.append(lemma.name())
+        return expanded_tokens
 
     def process_query(self, query):
         """
@@ -49,6 +49,6 @@ class QueryProcessor:
         :param query: Input query string
         :return: Processed query string
         """
-        preprocessed_query = self.preprocess_query(query)
-        expanded_query = self.expand_query(preprocessed_query)
-        return expanded_query
+        preprocessed_tokens = self.preprocess_query(query)
+        expanded_tokens = self.expand_query(preprocessed_tokens)
+        return ' '.join(expanded_tokens)
