@@ -3,10 +3,10 @@ import numpy as np
 from openrouter_client import OpenRouterClient
 
 class EmbeddingModel:
-    def __init__(self, model_name='all-MiniLM-L6-v2', use_openrouter=False):
+    def __init__(self, model_name='all-MiniLM-L6-v2', use_openrouter=False, site_url=None, site_name=None):
         self.use_openrouter = use_openrouter
         if use_openrouter:
-            self.openrouter_client = OpenRouterClient()
+            self.openrouter_client = OpenRouterClient(site_url=site_url, site_name=site_name)
         else:
             self.model = SentenceTransformer(model_name)
 
