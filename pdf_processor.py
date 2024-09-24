@@ -68,7 +68,11 @@ def process_multiple_pdfs(pdf_files, save_to_file=False, keyword_filter=None, ma
                 with open(output_path, 'w', encoding='utf-8') as out_file:
                     out_file.write(text)
             
-            db_manager.insert_pdf_extract(filename, text, page_count, clean_text, [emb.tolist() for emb in chunk_embeddings])
+            # Ensure that the number of chunks matches the number of embeddings
+            if len(chunks) == len(chunk_embeddings):
+                db_manager.insert_pdf_extract(filename, text, page_count, clean_text, [emb.tolist() for emb in chunk_embeddings])
+            else:
+                logging.warning(f"Mismatch in number of chunks ({len(chunks)}) and embeddings ({len(chunk_embeddings)}) for {filename}. Skipping database insertion.")
         else:
             failed_extractions += 1
     

@@ -34,7 +34,10 @@ class DatabaseManager:
         if self.faiss_manager:
             vectors = [np.array(emb) for emb in chunk_embeddings]
             chunks = extracted_text.split('\n\n')  # Assuming chunks are separated by double newlines
-            self.faiss_manager.add_vectors(vectors, chunks)
+            if len(vectors) == len(chunks):
+                self.faiss_manager.add_vectors(vectors, chunks)
+            else:
+                print(f"Warning: Mismatch in number of vectors ({len(vectors)}) and chunks ({len(chunks)}) for {filename}. Skipping FAISS insertion.")
 
     def get_pdf_extract(self, filename):
         self.cursor.execute('SELECT * FROM pdf_extracts WHERE filename = ?', (filename,))
