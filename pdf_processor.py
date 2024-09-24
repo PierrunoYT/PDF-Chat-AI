@@ -8,6 +8,7 @@ from nltk.tokenize import word_tokenize
 from database_manager import DatabaseManager
 from embedding_model import EmbeddingModel
 from text_chunker import TextChunker
+import numpy as np
 
 # This function is now redundant and can be removed
 
@@ -69,12 +70,8 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
         text, page_count = extract_text_from_pdf(file_path, max_pages, clean_text)
         if text:
             chunks = text_chunker.chunk_text(text)
-            chunk_embeddings = []
-            for chunk in chunks:
-                embedding = embedding_model.get_embedding(chunk)
-                chunk_embeddings.append((chunk, embedding))
-            
-            results[filename] = chunk_embeddings
+            chunk_embeddings = embedding_model.get_embeddings(chunks)
+            results[filename] = list(zip(chunks, chunk_embeddings))
             successful_extractions += 1
             if save_to_file:
                 output_path = os.path.join(directory, f"{os.path.splitext(filename)[0]}.txt")
@@ -82,7 +79,7 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
                     out_file.write(text)
             
             # Store in database
-            db_manager.insert_pdf_extract(filename, text, page_count, clean_text, [emb.tolist() for _, emb in chunk_embeddings])
+            db_manager.insert_pdf_extract(filename, text, page_count, clean_text, [emb.tolist() for emb in chunk_embeddings])
         else:
             failed_extractions += 1
     
