@@ -1,147 +1,103 @@
-# PDF Text Extractor and Processor
+# PDF Processing and Querying System
 
-This project provides a set of tools for extracting text from PDF files, processing the extracted text, and storing the results in a SQLite database.
+This project provides a comprehensive system for processing PDF files, extracting text, generating embeddings, and performing context-aware querying. It includes a web interface for easy interaction and asynchronous task processing.
 
 ## Features
 
 - Extract text from single or multiple PDF files
-- Clean and preprocess extracted text (optional)
-- Filter PDFs by keyword in filename
-- Limit the number of pages processed per PDF
-- Save extracted text to individual text files (optional)
-- Store extracted text and metadata in a SQLite database
+- Clean and preprocess extracted text
+- Generate embeddings for text chunks using OpenAI's models or local models
+- Store extracted text, metadata, and embeddings in a SQLite database
+- Use FAISS for efficient similarity search
+- Perform context-aware querying with conversation history
+- Web interface for uploading PDFs, indexing, and querying
+- Asynchronous task processing with Celery and Redis
 
 ## Requirements
 
-- Python 3.6+
+- Python 3.7+
+- Flask
+- Celery
+- Redis
 - PyPDF2
 - NLTK
+- sentence-transformers
+- FAISS
+- OpenAI API (optional)
 
 ## Installation
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/pdf-text-extractor.git
-   cd pdf-text-extractor
+   git clone https://github.com/yourusername/pdf-processing-system.git
+   cd pdf-processing-system
    ```
 
-2. Install the required packages:
+2. Create and activate a virtual environment:
    ```
-   pip install PyPDF2 nltk
+   python -m venv venv
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
    ```
 
-3. Download the necessary NLTK data:
-   ```python
-   import nltk
-   nltk.download('punkt')
-   nltk.download('stopwords')
+3. Install the required packages:
    ```
+   pip install -r requirements.txt
+   ```
+
+4. Set up environment variables:
+   Create a `.env` file in the project root and add the following variables:
+   ```
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
+   SITE_URL=https://your-site-url.com
+   SITE_NAME=Your Site Name
+   DB_NAME=pdf_extracts.db
+   FAISS_INDEX_FILE=pdf_embeddings.faiss
+   PDF_DIRECTORY=path/to/your/pdf/directory
+   USE_OPENROUTER=True
+   LOCAL_MODEL_NAME=all-MiniLM-L6-v2
+   OPENAI_EMBEDDING_MODEL=openai/text-embedding-3-small
+   EMBEDDING_DIMENSIONS=1536
+   CHUNK_SIZE=1000
+   CHUNK_OVERLAP=200
+   TOP_K_RESULTS=5
+   ```
+
+5. Set up Redis:
+   Make sure Redis is installed and running on your system.
 
 ## Usage
 
-### Processing multiple PDFs
+1. Start the Celery worker:
+   ```
+   celery -A celery_tasks worker --loglevel=info
+   ```
 
-```python
-from pdf_processor import process_multiple_pdfs
+2. Run the Flask application:
+   ```
+   python app.py
+   ```
 
-pdf_directory = "path/to/your/pdf/directory"
-results = process_multiple_pdfs(
-    directory=pdf_directory,
-    save_to_file=True,
-    keyword_filter="report",
-    max_pages=10,
-    clean_text=True
-)
-```
+3. Open a web browser and navigate to `http://localhost:5000` to access the web interface.
 
-### Extracting text from a single PDF
-
-```python
-from pdf_processor import extract_text_from_pdf
-
-single_pdf_path = "path/to/your/pdf/file.pdf"
-text, page_count = extract_text_from_pdf(single_pdf_path, max_pages=5, clean_text=True)
-```
-
-### Working with the database
-
-```python
-from database_manager import DatabaseManager
-
-db_manager = DatabaseManager()
-
-# Retrieve a PDF extract
-filename = "example.pdf"
-pdf_extract = db_manager.get_pdf_extract(filename)
-
-if pdf_extract:
-    print(f"Extraction date: {pdf_extract[4]}")
-    print(f"Page count: {pdf_extract[3]}")
-    print(f"Cleaned: {'Yes' if pdf_extract[5] else 'No'}")
-    print(f"Text preview: {pdf_extract[2][:500]}")  # Print first 500 characters
-
-db_manager.close()
-```
+4. Use the web interface to:
+   - Upload PDF files
+   - Index PDF files
+   - Perform context-aware queries
+   - View conversation history
 
 ## File Descriptions
 
-- `pdf_processor.py`: Contains functions for extracting text from PDFs and processing multiple PDFs.
-- `database_manager.py`: Manages the SQLite database for storing extracted text and metadata.
+- `app.py`: Flask application for the web interface
+- `celery_tasks.py`: Celery tasks for asynchronous processing
+- `indexing_pipeline.py`: Main pipeline for processing and indexing PDFs
+- `pdf_processor.py`: Functions for extracting text from PDFs
+- `database_manager.py`: Manages the SQLite database
+- `embedding_model.py`: Handles embedding generation
+- `faiss_manager.py`: Manages the FAISS index for similarity search
+- `query_processor.py`: Processes and expands queries
+- `prompt_engineer.py`: Generates prompts for context-aware responses
+- `openrouter_client.py`: Client for interacting with the OpenRouter API
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-# PDF Processing and Querying System
-
-This project provides a system for processing PDF files, extracting text, generating embeddings, and performing context-aware querying.
-
-## Setup
-
-### Prerequisites
-
-- Python 3.7 or higher
-- pip (Python package installer)
-
-### Creating a Virtual Environment
-
-It's recommended to use a virtual environment for this project. Here's how to set it up:
-
-1. Open a terminal or command prompt.
-
-2. Navigate to the project directory:
-   ```
-   cd path/to/your/project
-   ```
-
-3. Create a new virtual environment:
-   ```
-   python -m venv venv
-   ```
-
-4. Activate the virtual environment:
-   - On Windows:
-     ```
-     venv\Scripts\activate
-     ```
-   - On macOS and Linux:
-     ```
-     source venv/bin/activate
-     ```
-
-5. Your prompt should now show the name of your virtual environment, indicating it's active.
-
-### Installing Dependencies
-
-With your virtual environment activated, install the required packages:
-
-```
-pip install -r requirements.txt
-```
-
-## Usage
-
-[Add usage instructions here]
-
-## License
-
-[Add license information here]
