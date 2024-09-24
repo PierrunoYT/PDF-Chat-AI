@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from celery_tasks import run_indexing_pipeline, generate_context_aware_response
 import os
+import json
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 
