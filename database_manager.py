@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime
+import json
 
 class DatabaseManager:
     def __init__(self, db_name='pdf_extracts.db'):
@@ -15,21 +16,27 @@ class DatabaseManager:
             extracted_text TEXT,
             page_count INTEGER,
             extraction_date DATETIME,
-            cleaned BOOLEAN
+            cleaned BOOLEAN,
+            embedding TEXT
         )
         ''')
         self.conn.commit()
 
-    def insert_pdf_extract(self, filename, extracted_text, page_count, cleaned):
+    def insert_pdf_extract(self, filename, extracted_text, page_count, cleaned, embedding):
         self.cursor.execute('''
-        INSERT INTO pdf_extracts (filename, extracted_text, page_count, extraction_date, cleaned)
-        VALUES (?, ?, ?, ?, ?)
-        ''', (filename, extracted_text, page_count, datetime.now(), cleaned))
+        INSERT INTO pdf_extracts (filename, extracted_text, page_count, extraction_date, cleaned, embedding)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', (filename, extracted_text, page_count, datetime.now(), cleaned, json.dumps(embedding)))
         self.conn.commit()
 
     def get_pdf_extract(self, filename):
         self.cursor.execute('SELECT * FROM pdf_extracts WHERE filename = ?', (filename,))
-        return self.cursor.fetchone()
+        result = self.cursor.fetchone()
+        if result:
+            # Convert the embedding back to a list
+            result = list(result)
+            result[6] = json.loads(result[6])
+        return result
 
     def close(self):
         self.conn.close()
