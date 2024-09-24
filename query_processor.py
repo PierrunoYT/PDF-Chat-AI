@@ -1,3 +1,4 @@
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
@@ -7,6 +8,11 @@ from prompt_engineer import PromptEngineer
 
 class QueryProcessor:
     def __init__(self, embedding_model):
+        # Download required NLTK resources
+        nltk.download('punkt', quiet=True)
+        nltk.download('stopwords', quiet=True)
+        nltk.download('wordnet', quiet=True)
+        
         self.stop_words = set(stopwords.words('english'))
         self.lemmatizer = WordNetLemmatizer()
         self.embedding_model = embedding_model
