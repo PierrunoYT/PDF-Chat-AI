@@ -91,3 +91,57 @@ db_manager.close()
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+# PDF Processing and Querying System
+
+This project provides a system for processing PDF files, extracting text, generating embeddings, and performing context-aware querying.
+
+## Setup
+
+### Prerequisites
+
+- Python 3.7 or higher
+- pip (Python package installer)
+
+### Creating a Virtual Environment
+
+It's recommended to use a virtual environment for this project. Here's how to set it up:
+
+1. Open a terminal or command prompt.
+
+2. Navigate to the project directory:
+   ```
+   cd path/to/your/project
+   ```
+
+3. Create a new virtual environment:
+   ```
+   python -m venv venv
+   ```
+
+4. Activate the virtual environment:
+   - On Windows:
+     ```
+     venv\Scripts\activate
+     ```
+   - On macOS and Linux:
+     ```
+     source venv/bin/activate
+     ```
+
+5. Your prompt should now show the name of your virtual environment, indicating it's active.
+
+### Installing Dependencies
+
+With your virtual environment activated, install the required packages:
+
+```
+pip install -r requirements.txt
+```
+
+## Usage
+
+[Add usage instructions here]
+
+## License
+
+[Add license information here]
