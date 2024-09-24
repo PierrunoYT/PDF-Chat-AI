@@ -41,12 +41,13 @@ class OpenRouterClient:
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
 
-    def generate_embedding(self, text: str, model: str = "openai/text-embedding-3-small") -> List[float]:
+    def generate_embedding(self, text: str, model: str = "openai/text-embedding-3-small", dimensions: int = 1536) -> List[float]:
         """
         Generate an embedding for the given text using OpenRouter.
 
         :param text: The input text to embed
         :param model: The model to use for embedding
+        :param dimensions: The number of dimensions for the embedding (default: 1536)
         :return: The embedding as a list of floats
         """
         headers = {
@@ -61,7 +62,8 @@ class OpenRouterClient:
 
         data = {
             "model": model,
-            "input": text
+            "input": text,
+            "dimensions": dimensions
         }
 
         response = requests.post(f"{self.base_url}/embeddings", headers=headers, json=data)

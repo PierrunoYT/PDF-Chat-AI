@@ -18,7 +18,7 @@ class IndexingPipeline:
             use_openrouter=os.getenv('USE_OPENROUTER', 'True').lower() == 'true',
             site_url=os.getenv('SITE_URL'),
             site_name=os.getenv('SITE_NAME'),
-            model_name=os.getenv('LOCAL_MODEL_NAME')
+            model_name=os.getenv('OPENAI_EMBEDDING_MODEL', 'openai/text-embedding-3-small')
         )
         self.faiss_manager = FAISSManager(self.embedding_model.get_embedding_dimension())
         self.db_manager.set_faiss_manager(self.faiss_manager)

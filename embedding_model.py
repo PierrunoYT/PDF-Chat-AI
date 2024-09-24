@@ -51,7 +51,7 @@ class EmbeddingModel:
         :return: Integer representing the embedding dimension
         """
         if self.use_openrouter:
-            # OpenAI's text-embedding-3-small model produces 1536-dimensional embeddings
+            # OpenAI's text-embedding-3-small model produces 1536-dimensional embeddings by default
             return 1536
         else:
             return self.model.get_sentence_embedding_dimension()
