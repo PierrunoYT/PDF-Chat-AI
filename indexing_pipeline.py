@@ -7,6 +7,8 @@ import numpy as np
 from faiss_manager import FAISSManager
 from query_processor import QueryProcessor
 from openrouter_client import OpenRouterClient
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 
 load_dotenv()
 
@@ -24,12 +26,35 @@ class IndexingPipeline:
         self.query_processor = QueryProcessor(self.embedding_model)
         self.openrouter_client = OpenRouterClient()
 
-    def run(self, pdf_files, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200):
+    def run(self, pdf_files, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200, progress_callback=None):
         if isinstance(pdf_files, str):
             pdf_files = [pdf_files]
         
-        results = process_multiple_pdfs(
-            pdf_files,
+        total_files = len(pdf_files)
+        processed_files = 0
+        start_time = time.time()
+
+        with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+            future_to_file = {executor.submit(self.process_single_pdf, file, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap): file for file in pdf_files}
+            
+            for future in as_completed(future_to_file):
+                file = future_to_file[future]
+                try:
+                    result = future.result()
+                    processed_files += 1
+                    if progress_callback:
+                        progress_callback(processed_files, total_files, time.time() - start_time)
+                except Exception as exc:
+                    print(f'{file} generated an exception: {exc}')
+
+        self.faiss_manager.save_index(self.faiss_index_file)
+        self.db_manager.close()
+        
+        return processed_files
+
+    def process_single_pdf(self, pdf_file, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap):
+        return process_multiple_pdfs(
+            [pdf_file],
             save_to_file=save_to_file,
             keyword_filter=keyword_filter,
             max_pages=max_pages,
@@ -41,11 +66,6 @@ class IndexingPipeline:
             embedding_model=self.embedding_model,
             faiss_manager=self.faiss_manager
         )
-        
-        self.faiss_manager.save_index(self.faiss_index_file)
-        self.db_manager.close()
-        
-        return results
 
     def search_similar_chunks(self, query_text, k=5):
         query_vector = self.query_processor.query_to_embedding(query_text)

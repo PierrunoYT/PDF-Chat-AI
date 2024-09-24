@@ -18,16 +18,29 @@ task_results = {}
 
 def run_indexing_pipeline_task(task_id, pdf_files, save_to_file, keyword_filter, max_pages, clean_text, chunk_size, chunk_overlap):
     pipeline = IndexingPipeline()
-    results = pipeline.run(
+    
+    def progress_callback(processed_files, total_files, elapsed_time):
+        progress = (processed_files / total_files) * 100
+        eta = (elapsed_time / processed_files) * (total_files - processed_files) if processed_files > 0 else 0
+        task_results[task_id] = {
+            'state': 'PROGRESS',
+            'current': processed_files,
+            'total': total_files,
+            'status': f'Processed {processed_files}/{total_files} files ({progress:.2f}%)',
+            'eta': f'{eta:.2f} seconds'
+        }
+
+    processed_files = pipeline.run(
         pdf_files=pdf_files,
         save_to_file=save_to_file,
         keyword_filter=keyword_filter,
         max_pages=max_pages,
         clean_text=clean_text,
         chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap
+        chunk_overlap=chunk_overlap,
+        progress_callback=progress_callback
     )
-    task_results[task_id] = f'Indexed {len(results)} PDF files successfully.'
+    task_results[task_id] = {'state': 'SUCCESS', 'result': f'Indexed {processed_files} PDF files successfully.'}
 
 def generate_context_aware_response_task(task_id, query_text, conversation_history, k=5):
     pipeline = IndexingPipeline()

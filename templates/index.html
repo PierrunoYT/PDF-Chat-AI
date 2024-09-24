@@ -182,17 +182,21 @@
 
             function checkTaskStatus(taskId, taskType) {
                 $.get('/task_status/' + taskId, function(data) {
-                    if (data.state === 'PENDING') {
-                        $('#result').html('<p>' + taskType + ' läuft, bitte warten...</p>');
+                    if (data.state === 'PENDING' || data.state === 'PROGRESS') {
+                        if (data.state === 'PROGRESS') {
+                            $('#result').html('<p>' + taskType + ' läuft: ' + data.status + '</p><p>Geschätzte verbleibende Zeit: ' + data.eta + '</p>');
+                        } else {
+                            $('#result').html('<p>' + taskType + ' läuft, bitte warten...</p>');
+                        }
                         setTimeout(function() {
                             checkTaskStatus(taskId, taskType);
                         }, 2000);
                     } else if (data.state === 'SUCCESS') {
-                        $('#result').html('<h3>' + taskType + '-Ergebnis:</h3><p>' + data.result.response + '</p>');
+                        $('#result').html('<h3>' + taskType + '-Ergebnis:</h3><p>' + data.result + '</p>');
                         if (taskType === 'Konversation') {
                             conversationHistory.push({"role": "assistant", "content": data.result.response});
+                            updateConversationHistory();
                         }
-                        updateConversationHistory();
                     } else {
                         $('#result').html('<h3>Fehler bei der ' + taskType + ':</h3><p>' + data.status + '</p>');
                     }
