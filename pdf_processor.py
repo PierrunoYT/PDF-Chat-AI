@@ -38,7 +38,7 @@ def clean_and_preprocess_text(text):
     
     return cleaned_text
 
-def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200, use_faiss=True):
+def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False, chunk_size=1000, chunk_overlap=200, use_faiss=True, db_manager=None, embedding_model=None, faiss_manager=None):
     """
     Process multiple PDF files in a directory, store results in a database, and generate embeddings for text chunks.
     
@@ -49,6 +49,10 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
     :param clean_text: If True, clean and preprocess the extracted text
     :param chunk_size: Size of text chunks for embedding
     :param chunk_overlap: Overlap between text chunks
+    :param use_faiss: If True, use FAISS for similarity search
+    :param db_manager: DatabaseManager instance
+    :param embedding_model: EmbeddingModel instance
+    :param faiss_manager: FAISSManager instance
     :return: Dictionary with PDF filenames as keys and lists of tuples (chunk_text, chunk_embedding) as values
     """
     results = {}
@@ -60,11 +64,13 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
     successful_extractions = 0
     failed_extractions = 0
     
-    db_manager = DatabaseManager()
-    embedding_model = EmbeddingModel()
+    if db_manager is None:
+        db_manager = DatabaseManager()
+    if embedding_model is None:
+        embedding_model = EmbeddingModel()
     text_chunker = TextChunker(chunk_size, chunk_overlap)
 
-    if use_faiss:
+    if use_faiss and faiss_manager is None:
         faiss_manager = FAISSManager(embedding_model.get_embedding_dimension())
         db_manager.set_faiss_manager(faiss_manager)
     
@@ -87,11 +93,6 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
             db_manager.insert_pdf_extract(filename, text, page_count, clean_text, [emb.tolist() for emb in chunk_embeddings])
         else:
             failed_extractions += 1
-    
-    db_manager.close()
-
-    if use_faiss:
-        faiss_manager.save_index('pdf_embeddings.faiss')
     
     print(f"\nProcessing Summary:")
     print(f"Total PDFs processed: {total_files}")

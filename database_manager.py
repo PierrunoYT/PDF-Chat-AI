@@ -33,7 +33,7 @@ class DatabaseManager:
 
         if self.faiss_manager:
             vectors = [np.array(emb) for emb in chunk_embeddings]
-            chunks = [chunk for chunk, _ in json.loads(extracted_text)]
+            chunks = extracted_text.split('\n\n')  # Assuming chunks are separated by double newlines
             self.faiss_manager.add_vectors(vectors, chunks)
 
     def get_pdf_extract(self, filename):
