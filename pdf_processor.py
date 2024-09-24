@@ -1,6 +1,7 @@
 import os
 import re
 import string
+import io
 from PyPDF2 import PdfReader
 from PyPDF2.errors import PdfReadError
 from nltk.corpus import stopwords
