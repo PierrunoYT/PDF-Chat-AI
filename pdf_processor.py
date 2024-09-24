@@ -6,6 +6,7 @@ from PyPDF2.errors import PdfReadError
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from database_manager import DatabaseManager
+from embedding_model import EmbeddingModel
 
 # This function is now redundant and can be removed
 
@@ -36,14 +37,14 @@ def clean_and_preprocess_text(text):
 
 def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, max_pages=None, clean_text=False):
     """
-    Process multiple PDF files in a directory and store results in a database.
+    Process multiple PDF files in a directory, store results in a database, and generate embeddings.
     
     :param directory: Path to the directory containing PDF files
     :param save_to_file: If True, save extracted text to individual text files
     :param keyword_filter: If provided, only process PDFs with this keyword in the filename
     :param max_pages: If provided, limit the number of pages processed per PDF
     :param clean_text: If True, clean and preprocess the extracted text
-    :return: Dictionary with PDF filenames as keys and extracted text as values
+    :return: Dictionary with PDF filenames as keys and tuples of (extracted text, embedding) as values
     """
     results = {}
     pdf_files = [f for f in os.listdir(directory) if f.endswith(".pdf")]
@@ -55,6 +56,7 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
     failed_extractions = 0
     
     db_manager = DatabaseManager()
+    embedding_model = EmbeddingModel()
     
     for i, filename in enumerate(pdf_files, 1):
         file_path = os.path.join(directory, filename)
@@ -62,7 +64,8 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
         
         text, page_count = extract_text_from_pdf(file_path, max_pages, clean_text)
         if text:
-            results[filename] = text
+            embedding = embedding_model.get_embedding(text)
+            results[filename] = (text, embedding)
             successful_extractions += 1
             if save_to_file:
                 output_path = os.path.join(directory, f"{os.path.splitext(filename)[0]}.txt")
@@ -70,7 +73,7 @@ def process_multiple_pdfs(directory, save_to_file=False, keyword_filter=None, ma
                     out_file.write(text)
             
             # Store in database
-            db_manager.insert_pdf_extract(filename, text, page_count, clean_text)
+            db_manager.insert_pdf_extract(filename, text, page_count, clean_text, embedding.tolist())
         else:
             failed_extractions += 1
     
