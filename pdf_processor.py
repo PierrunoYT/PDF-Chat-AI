@@ -34,7 +34,7 @@ def process_multiple_pdfs(pdf_files, save_to_file=False, keyword_filter=None, ma
     """
     results = {}
     if keyword_filter:
-        pdf_files = [f for f in pdf_files if keyword_filter.lower() in os.path.basename(f).lower()]
+        pdf_files = [f for f in pdf_files if isinstance(f, str) and keyword_filter.lower() in os.path.basename(f).lower()]
     total_files = len(pdf_files)
     
     successful_extractions = 0
@@ -48,8 +48,13 @@ def process_multiple_pdfs(pdf_files, save_to_file=False, keyword_filter=None, ma
         faiss_manager = FAISSManager(embedding_model.get_embedding_dimension())
         db_manager.set_faiss_manager(faiss_manager)
     
-    for i, file_path in enumerate(pdf_files, 1):
-        filename = os.path.basename(file_path)
+    for i, file_obj in enumerate(pdf_files, 1):
+        if isinstance(file_obj, str):
+            filename = os.path.basename(file_obj)
+            file_path = file_obj
+        else:
+            filename = f"uploaded_file_{i}.pdf"
+            file_path = file_obj
         logging.info(f"Processing {i}/{total_files}: {filename}")
         
         text, page_count = extract_text_from_pdf(file_path, max_pages, clean_text)
@@ -80,8 +85,11 @@ def extract_text_from_pdf(pdf_file, max_pages=None, clean_text=False, max_retrie
     """
     for attempt in range(max_retries):
         try:
-            with open(pdf_file, 'rb') as file:
-                reader = PdfReader(file)
+            if isinstance(pdf_file, str):
+                with open(pdf_file, 'rb') as file:
+                    reader = PdfReader(file)
+            else:
+                reader = PdfReader(pdf_file)
             
             text = ""
             total_pages = len(reader.pages)
