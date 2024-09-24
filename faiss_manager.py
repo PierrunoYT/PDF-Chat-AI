@@ -4,8 +4,7 @@ import numpy as np
 class FAISSManager:
     def __init__(self, dimension):
         self.dimension = dimension
-        self.res = faiss.StandardGpuResources()  # Use GPU resources
-        self.index = faiss.GpuIndexFlatL2(self.res, dimension)  # Create a GPU index
+        self.index = faiss.IndexFlatL2(dimension)  # Create a CPU index
         self.id_to_text = {}
 
     def add_vectors(self, vectors, texts):
