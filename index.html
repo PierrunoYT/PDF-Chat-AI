@@ -3,46 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meine Web-UI-Vorlage</title>
+    <title>Meine Moderne Web-UI-Vorlage</title>
     <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --text-color: #333;
+            --background-color: #f4f4f4;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
+        
         header {
-            background-color: #333;
-            color: #fff;
-            text-align: center;
+            background-color: var(--primary-color);
+            color: white;
             padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        
+        nav {
+            background-color: var(--secondary-color);
+            padding: 0.5rem;
+        }
+        
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        
+        nav ul li {
+            margin: 0 1rem;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        nav ul li a:hover {
+            color: var(--primary-color);
+        }
+        
         main {
-            padding: 2rem;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
         }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
         footer {
-            background-color: #333;
-            color: #fff;
+            background-color: var(--secondary-color);
+            color: white;
             text-align: center;
             padding: 1rem;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            nav ul li {
+                margin: 0.5rem 0;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Willkommen zu meiner Web-UI-Vorlage</h1>
+        <h1>Willkommen zu meiner modernen Web-UI-Vorlage</h1>
     </header>
     
+    <nav>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">Über uns</a></li>
+            <li><a href="#services">Dienstleistungen</a></li>
+            <li><a href="#contact">Kontakt</a></li>
+        </ul>
+    </nav>
+    
     <main>
-        <h2>Hauptinhalt</h2>
-        <p>Dies ist der Hauptinhalt Ihrer Webseite. Hier können Sie Ihren spezifischen Inhalt hinzufügen.</p>
+        <div class="card">
+            <h2>Hauptinhalt</h2>
+            <p>Dies ist der Hauptinhalt Ihrer Webseite. Hier können Sie Ihren spezifischen Inhalt hinzufügen.</p>
+        </div>
+        <div class="card">
+            <h2>Funktionen</h2>
+            <p>Entdecken Sie die vielfältigen Funktionen unserer modernen Web-UI-Vorlage.</p>
+        </div>
+        <div class="card">
+            <h2>Responsive Design</h2>
+            <p>Unsere Vorlage passt sich perfekt an verschiedene Bildschirmgrößen an.</p>
+        </div>
     </main>
 
     <footer>
-        <p>&copy; 2024 Meine Web-UI-Vorlage. Alle Rechte vorbehalten.</p>
+        <p>&copy; 2024 Meine Moderne Web-UI-Vorlage. Alle Rechte vorbehalten.</p>
     </footer>
 </body>
 </html>
