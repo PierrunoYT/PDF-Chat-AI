@@ -1,6 +1,6 @@
-# PDF Processing and Querying System
+# PDFChatAI
 
-This project provides a comprehensive system for processing PDF files, extracting text, generating embeddings, and performing context-aware querying. It includes a web interface for easy interaction and asynchronous task processing.
+PDFChatAI is an advanced tool for interacting with PDF documents using AI technology. It processes PDF files, extracts text, generates embeddings, and enables context-aware querying through a user-friendly web interface with asynchronous task processing.
 
 ## Features
 
@@ -27,8 +27,8 @@ This project provides a comprehensive system for processing PDF files, extractin
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/pdf-processing-system.git
-   cd pdf-processing-system
+   git clone https://github.com/yourusername/PDFChatAI.git
+   cd PDFChatAI
    ```
 
 2. Create and activate a virtual environment:
@@ -74,4 +74,4 @@ This project provides a comprehensive system for processing PDF files, extractin
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+PDFChatAI is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
