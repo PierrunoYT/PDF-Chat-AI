@@ -29,8 +29,8 @@ GitHub Repository: [https://github.com/PierrunoYT/PDF-Chat-AI](https://github.co
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/PDFChatAI.git
-   cd PDFChatAI
+   git clone https://github.com/PierrunoYT/PDF-Chat-AI.git
+   cd PDF-Chat-AI
    ```
 
 2. Create and activate a virtual environment:
