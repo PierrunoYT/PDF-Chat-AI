@@ -2,6 +2,8 @@
 
 PDFChatAI is an advanced tool for interacting with PDF documents using AI technology. It processes PDF files, extracts text, generates embeddings, and enables context-aware querying through a user-friendly web interface with asynchronous task processing.
 
+GitHub Repository: [https://github.com/PierrunoYT/PDF-Chat-AI](https://github.com/PierrunoYT/PDF-Chat-AI)
+
 ## Features
 
 - Extract text from single or multiple PDF files
